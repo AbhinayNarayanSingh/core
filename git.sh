@@ -8,14 +8,14 @@ remote="origin"
 
 origin="main"
 
-branch="main"
+branch="master"
 # branch=bugfix/shipping-flow-bug-06
 # branch=feature/sign-up-api-integrated
 # branch=release/shell_script
 
 prCommentResolverCommit=2
 
-title="Initial commit"
+title="Change in commit script"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`
