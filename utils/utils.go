@@ -2,7 +2,6 @@ package utils
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -19,6 +18,7 @@ import (
 )
 
 var userCollection *mongo.Collection = config.OpenCollection(config.Client, "users")
+
 var JWT_SECRET_KEY = os.Getenv("JWT_SECRET_KEY")
 
 type JWTClaims struct {
@@ -38,6 +38,7 @@ func CheckUserIsAdmin(c *gin.Context) (err error) {
 
 	if !isUserAdmin {
 		err = errors.New("Unauthorized to access : Admin protected routes")
+		log.Println(isUserAdmin, "isUserAdmin")
 		return err
 	}
 	return err
@@ -47,6 +48,8 @@ func MatchUserTypeToUid(c *gin.Context, userId string) (err error) {
 	isAdmin := c.GetBool("is_admin")
 	uid := c.GetString("_id")
 	err = nil
+
+	log.Println(isAdmin, "isAdmin")
 
 	if !isAdmin && uid != userId {
 		err = errors.New("Unauthorized to access")
@@ -63,8 +66,8 @@ func GenerateJWTToken(ID string, Email string, FirstName string, LastName string
 		FirstName: FirstName,
 		LastName:  LastName,
 		Phone:     Phone,
+		IsAdmin:   IsAdmin,
 		IsActive:  IsActive,
-		IsAdmin:   IsActive,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(24)).Unix(),
 		},

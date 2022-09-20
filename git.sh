@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="work on auth api with jwt token"
+title="worked on otp generator & opt verification api"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`

@@ -13,9 +13,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var userCollection *mongo.Collection = config.OpenCollection(config.Client, "users")
+var otpCollection *mongo.Collection = config.OpenCollection(config.Client, "otp")
 
 var validate = validator.New()
 
@@ -73,16 +75,6 @@ func SignUp() gin.HandlerFunc {
 		user.IsActive = &false
 		user.IsAdmin = &false
 
-		token, refershToken, err := utils.GenerateJWTToken(userId, *user.Email, *user.FirstName, *user.LastName, *user.Phone, *user.IsAdmin, *user.IsActive)
-
-		if err != nil {
-			c.JSON(400, gin.H{"message": "Internal Error during GenerateJWTToken"})
-			return
-		}
-
-		user.Refersh_token = &refershToken
-		user.Token = &token
-
 		result, err := userCollection.InsertOne(ctx, user)
 
 		if err != nil {
@@ -113,7 +105,13 @@ func SignIn() gin.HandlerFunc {
 		}
 
 		if isPasswordCorrect, _ := utils.VerifyPassword(*user.Password, *foundUser.Password); !isPasswordCorrect {
-			c.JSON(401, gin.H{"message": "Unauthorized"})
+			c.JSON(401, gin.H{"message": "Invalid password"})
+			return
+		}
+
+		println(*foundUser.IsActive, "foundUser.IsActive")
+		if !*foundUser.IsActive {
+			c.JSON(401, gin.H{"message": "Thank you for signing up, please enter your 6 digit one-time password to activate your account."})
 			return
 		}
 
@@ -136,13 +134,6 @@ func SignIn() gin.HandlerFunc {
 
 func GetUsers() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// if err := utils.CheckUserIsAdmin(c); err != nil {
-		// 	c.JSON(401, gin.H{"message": "Unauthorized"})
-		// 	return
-		// }
-		// var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		// defer cancel()
-
 		c.JSON(200, gin.H{"message": "Under developement..."})
 	}
 }
@@ -165,5 +156,106 @@ func GetUserByID() gin.HandlerFunc {
 			return
 		}
 		c.JSON(200, user)
+	}
+}
+
+func OTPGenerator() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var otp models.OTP
+		var user models.User
+
+		staticOtp := "123456"
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		if err := c.BindJSON(&otp); err != nil {
+			c.JSON(400, gin.H{"message": err.Error()})
+			return
+		}
+
+		if err := userCollection.FindOne(ctx, bson.M{"phone": otp.Phone}).Decode(&user); err != nil {
+			c.JSON(400, gin.H{"message": "User not registered  with given number"})
+			return
+		}
+
+		if count, err := otpCollection.CountDocuments(ctx, bson.M{"phone": otp.Phone}); err != nil {
+			c.JSON(400, gin.H{"message": err.Error()})
+			return
+		} else if count > 0 {
+			c.JSON(200, gin.H{"message": "A OTP (One Time Password) has been sent on your phone"})
+			return
+		}
+
+		otp.User_Id = user.User_Id
+
+		otp.ID = primitive.NewObjectID()
+		otpHex := otp.ID.Hex()
+		otp.OTP_Id = &otpHex
+
+		password, _ := utils.HashPassword(staticOtp)
+		otp.OTP = &password
+
+		_, err := otpCollection.InsertOne(ctx, otp)
+
+		if err != nil {
+			c.JSON(400, gin.H{"message": "Internal Error"})
+			return
+		}
+		c.JSON(200, gin.H{"message": "A OTP (One Time Password) has been sent on your phone"})
+	}
+}
+
+func OTPVerify() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var otp models.OTP
+		var otpObj models.OTP
+
+		var user models.User
+		var updateObject primitive.D
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		// post body render
+		if err := c.BindJSON(&otp); err != nil {
+			c.JSON(500, gin.H{"message": err.Error()})
+			return
+		}
+
+		// finding user object in user model
+		if err := userCollection.FindOne(ctx, bson.M{"phone": otp.Phone}).Decode(&user); err != nil {
+			c.JSON(400, gin.H{"message": "user with given phone number not registered"})
+			return
+		}
+
+		// searching user phone details in otp models
+		if err := otpCollection.FindOne(ctx, bson.M{"phone": otp.Phone}).Decode(&otpObj); err != nil {
+			c.JSON(400, gin.H{"message": "OTP not generated"})
+			return
+		}
+
+		// verifying otp
+		if isOTPCorrect, _ := utils.VerifyPassword(*otp.OTP, *otpObj.OTP); !isOTPCorrect {
+			c.JSON(401, gin.H{"message": "Invalid otp"})
+			return
+		}
+
+		updateObject = append(updateObject, bson.E{Key: "isactive", Value: true})
+
+		upsert := true
+		filter := bson.M{"phone": otp.Phone}
+		opt := options.UpdateOptions{
+			Upsert: &upsert,
+		}
+
+		if _, err := userCollection.UpdateOne(ctx, filter, bson.D{
+			{Key: "$set", Value: updateObject},
+		}, &opt); err != nil {
+			c.JSON(400, gin.H{"message": err})
+			return
+		}
+		c.JSON(200, gin.H{"message": "Account activated"})
+
 	}
 }

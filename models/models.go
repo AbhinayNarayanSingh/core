@@ -22,3 +22,12 @@ type User struct {
 	Refersh_token *string            `json:"refersh_token"`
 	User_Id       *string            `json:"user_id"`
 }
+
+type OTP struct {
+	ID      primitive.ObjectID `json:"_id" bson:"_id"`
+	OTP_Id  *string            `json:"otp_id"`
+	User_Id *string            `json:"user_id"`
+	Email   *string            `json:"email"`
+	Phone   *string            `json:"phone"`
+	OTP     *string            `json:"otp"`
+}
