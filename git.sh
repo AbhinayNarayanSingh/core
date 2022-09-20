@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="Change in commit script"
+title="work on auth api with jwt token"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`
