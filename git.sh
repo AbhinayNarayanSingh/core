@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="worked on otp generator & opt verification api"
+title="git ignore added"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`
