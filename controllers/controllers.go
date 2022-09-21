@@ -3,9 +3,11 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/AbhinayNarayanSingh/core/config"
+	"github.com/AbhinayNarayanSingh/core/locals"
 	"github.com/AbhinayNarayanSingh/core/models"
 	"github.com/AbhinayNarayanSingh/core/utils"
 	"github.com/gin-gonic/gin"
@@ -23,6 +25,7 @@ var validate = validator.New()
 
 func Welcome() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		c.JSON(200, gin.H{"message": "Hello programmer..."})
 	}
 }
@@ -34,7 +37,7 @@ func SignUp() gin.HandlerFunc {
 		defer cancel()
 
 		if err := c.BindJSON(&user); err != nil {
-			c.JSON(400, gin.H{"message": err.Error()})
+			c.JSON(400, gin.H{"message": locals.InternalServerError, "details": err.Error()})
 			return
 		}
 
@@ -47,7 +50,7 @@ func SignUp() gin.HandlerFunc {
 			c.JSON(400, gin.H{"message": err.Error()})
 			return
 		} else if count > 0 {
-			c.JSON(400, gin.H{"message": "User allready registerd with given email"})
+			c.JSON(400, gin.H{"message": locals.EmailAssociateWithAccount})
 			return
 		}
 
@@ -55,7 +58,7 @@ func SignUp() gin.HandlerFunc {
 			c.JSON(400, gin.H{"message": err.Error()})
 			return
 		} else if count > 0 {
-			c.JSON(400, gin.H{"message": "User allready registerd with given number"})
+			c.JSON(400, gin.H{"message": locals.EmailNotRegistered})
 			return
 		}
 
@@ -79,7 +82,7 @@ func SignUp() gin.HandlerFunc {
 
 		if err != nil {
 			fmt.Println("User data not created")
-			c.JSON(400, gin.H{"message": "Internal Error"})
+			c.JSON(400, gin.H{"message": locals.InternalServerError})
 			return
 		}
 		c.JSON(200, gin.H{"message": result})
@@ -95,23 +98,22 @@ func SignIn() gin.HandlerFunc {
 		var foundUser models.User
 
 		if err := c.BindJSON(&user); err != nil {
-			c.JSON(400, gin.H{"message": "Internal Error"})
+			c.JSON(400, gin.H{"message": locals.InternalServerError})
 			return
 		}
 
 		if err := userCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser); err != nil {
-			c.JSON(400, gin.H{"message": "User not registed with email"})
+			c.JSON(400, gin.H{"message": locals.EmailNotRegistered})
 			return
 		}
 
 		if isPasswordCorrect, _ := utils.VerifyPassword(*user.Password, *foundUser.Password); !isPasswordCorrect {
-			c.JSON(401, gin.H{"message": "Invalid password"})
+			c.JSON(401, gin.H{"message": locals.InvalidPassword})
 			return
 		}
 
-		println(*foundUser.IsActive, "foundUser.IsActive")
 		if !*foundUser.IsActive {
-			c.JSON(401, gin.H{"message": "Thank you for signing up, please enter your 6 digit one-time password to activate your account."})
+			c.JSON(401, gin.H{"message": locals.AccountNotActivated})
 			return
 		}
 
@@ -134,7 +136,7 @@ func SignIn() gin.HandlerFunc {
 
 func GetUsers() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "Under developement..."})
+		c.JSON(200, gin.H{"message": locals.InternalServerError})
 	}
 }
 
@@ -163,8 +165,7 @@ func OTPGenerator() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var otp models.OTP
 		var user models.User
-
-		staticOtp := "123456"
+		var updateObject primitive.D
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
@@ -175,34 +176,55 @@ func OTPGenerator() gin.HandlerFunc {
 		}
 
 		if err := userCollection.FindOne(ctx, bson.M{"phone": otp.Phone}).Decode(&user); err != nil {
-			c.JSON(400, gin.H{"message": "User not registered  with given number"})
+			c.JSON(400, gin.H{"message": locals.PhoneNotRegistered})
 			return
 		}
+
+		generatedOTP, error := utils.OTPGenerator(6)
+		if error != nil {
+			c.JSON(400, gin.H{"message": locals.InternalServerError, "details": error})
+			return
+		}
+
+		hashOTP, _ := utils.HashPassword(generatedOTP)
+		otp.OTP = &hashOTP
+		updateObject = append(updateObject, bson.E{Key: "otp", Value: &hashOTP})
 
 		if count, err := otpCollection.CountDocuments(ctx, bson.M{"phone": otp.Phone}); err != nil {
 			c.JSON(400, gin.H{"message": err.Error()})
 			return
 		} else if count > 0 {
-			c.JSON(200, gin.H{"message": "A OTP (One Time Password) has been sent on your phone"})
+			upsert := true
+			filter := bson.M{"phone": otp.Phone}
+			update := bson.D{
+				{Key: "$set", Value: updateObject},
+			}
+			opts := options.UpdateOptions{
+				Upsert: &upsert,
+			}
+
+			if _, err := otpCollection.UpdateOne(ctx, filter, update, &opts); err != nil {
+				c.JSON(400, gin.H{"message": locals.InternalServerError, "details": err})
+				return
+			}
+
+			c.JSON(200, gin.H{"message": locals.OTPSend, "otp": generatedOTP})
 			return
 		}
 
 		otp.User_Id = user.User_Id
 
 		otp.ID = primitive.NewObjectID()
-		otpHex := otp.ID.Hex()
-		otp.OTP_Id = &otpHex
-
-		password, _ := utils.HashPassword(staticOtp)
-		otp.OTP = &password
+		otpHexID := otp.ID.Hex()
+		otp.OTP_Id = &otpHexID
 
 		_, err := otpCollection.InsertOne(ctx, otp)
 
 		if err != nil {
-			c.JSON(400, gin.H{"message": "Internal Error"})
+			c.JSON(400, gin.H{"message": locals.InternalServerError})
 			return
 		}
-		c.JSON(200, gin.H{"message": "A OTP (One Time Password) has been sent on your phone"})
+		c.JSON(200, gin.H{"message": locals.OTPSend, "otp": generatedOTP})
 	}
 }
 
@@ -225,19 +247,19 @@ func OTPVerify() gin.HandlerFunc {
 
 		// finding user object in user model
 		if err := userCollection.FindOne(ctx, bson.M{"phone": otp.Phone}).Decode(&user); err != nil {
-			c.JSON(400, gin.H{"message": "user with given phone number not registered"})
+			c.JSON(400, gin.H{"message": locals.PhoneNotRegistered})
 			return
 		}
 
 		// searching user phone details in otp models
 		if err := otpCollection.FindOne(ctx, bson.M{"phone": otp.Phone}).Decode(&otpObj); err != nil {
-			c.JSON(400, gin.H{"message": "OTP not generated"})
+			c.JSON(400, gin.H{"message": locals.OTPNotGenerated})
 			return
 		}
 
 		// verifying otp
 		if isOTPCorrect, _ := utils.VerifyPassword(*otp.OTP, *otpObj.OTP); !isOTPCorrect {
-			c.JSON(401, gin.H{"message": "Invalid otp"})
+			c.JSON(401, gin.H{"message": locals.OTPInvalid})
 			return
 		}
 
@@ -249,13 +271,49 @@ func OTPVerify() gin.HandlerFunc {
 			Upsert: &upsert,
 		}
 
+		// here we're changing status of user account
 		if _, err := userCollection.UpdateOne(ctx, filter, bson.D{
 			{Key: "$set", Value: updateObject},
 		}, &opt); err != nil {
 			c.JSON(400, gin.H{"message": err})
 			return
 		}
-		c.JSON(200, gin.H{"message": "Account activated"})
+
+		// here we're deleting otp instance from otpCollection
+		fmt.Println(otpObj.OTP_Id, "otp.OTP_Id")
+		_, err := otpCollection.DeleteOne(ctx, filter)
+		if err != nil {
+			c.JSON(400, gin.H{"message": err})
+			return
+		}
+
+		c.JSON(200, gin.H{"message": locals.AccountActivated})
+
+	}
+}
+
+func UpdatePassword() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var user models.User
+		var foundUser models.User
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		if err := c.BindJSON(&user); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": locals.InternalServerError})
+			return
+		}
+
+		if err := userCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser); err != nil {
+			c.JSON(400, gin.H{"message": locals.EmailNotRegistered})
+			return
+		}
+
+		if isPasswordCorrect, _ := utils.VerifyPassword(*user.Password, *foundUser.Password); !isPasswordCorrect {
+			c.JSON(401, gin.H{"message": locals.InvalidPassword})
+			return
+		}
 
 	}
 }

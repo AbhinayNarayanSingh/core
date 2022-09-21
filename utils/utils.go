@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"crypto/rand"
 	"log"
 	"os"
 	"time"
@@ -158,4 +159,21 @@ func ValidateToken(providedToken string) (*JWTClaims, error) {
 		return nil, nil
 	}
 	return claims, nil
+}
+
+func OTPGenerator(length int) (string, error) {
+	otpChars := "1234567890"
+	buffer := make([]byte, length)
+
+	_, err := rand.Read(buffer)
+	if err != nil {
+		return "", err
+	}
+
+	otpCharsLength := len(otpChars)
+	for i := 0; i < length; i++ {
+		buffer[i] = otpChars[int(buffer[i])%otpCharsLength]
+	}
+
+	return string(buffer), nil
 }

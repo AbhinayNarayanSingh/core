@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="git ignore added"
+title="worked on otp verify & random otp generator, made constants for error messages and removed gitignore file"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`
