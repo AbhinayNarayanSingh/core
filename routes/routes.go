@@ -15,11 +15,15 @@ func Path(router *gin.Engine) {
 	router.POST("/signup/otp", controllers.OTPGenerator())
 	router.POST("/signup/otp/verify", controllers.OTPVerify())
 
+	router.POST("/user/password/reset", controllers.ResetPasswordInitiator())
+	router.POST("/user/password/reset/verify", controllers.ResetPassword())
+
 	router.GET("/users", controllers.GetUsers())
 }
 
 func SecurePath(router *gin.Engine) {
 	router.Use(middleware.AuthenticationMiddleware())
 
+	router.POST("/user/password", controllers.UpdatePassword())
 	router.GET("/users/:user_id", controllers.GetUserByID())
 }

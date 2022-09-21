@@ -45,12 +45,10 @@ func CheckUserIsAdmin(c *gin.Context) (err error) {
 	return err
 }
 
-func MatchUserTypeToUid(c *gin.Context, userId string) (err error) {
+func AuthenticateUser(c *gin.Context, userId string) (err error) {
 	isAdmin := c.GetBool("is_admin")
 	uid := c.GetString("_id")
 	err = nil
-
-	log.Println(isAdmin, "isAdmin")
 
 	if !isAdmin && uid != userId {
 		err = errors.New("Unauthorized to access")
@@ -79,9 +77,6 @@ func GenerateJWTToken(ID string, Email string, FirstName string, LastName string
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(720)).Unix(),
 		},
 	}
-
-	// token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(SECRET_KEY))
-	// refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(SECRET_KEY))
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(JWT_SECRET_KEY))
 	if err != nil {
@@ -115,6 +110,28 @@ func VerifyPassword(userEnteredPassword string, password string) (bool, string) 
 		return isPasswordCorrect, msg
 	}
 	return isPasswordCorrect, msg
+}
+
+func UpdateUpdateAt(user_id string) {
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	var updateObject primitive.D
+
+	currentDateTime, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+	updateObject = append(updateObject, bson.E{Key: "updated_at", Value: currentDateTime})
+
+	upsert := true
+	filter := bson.M{"user_id": user_id}
+	opt := options.UpdateOptions{
+		Upsert: &upsert,
+	}
+
+	if _, err := userCollection.UpdateOne(ctx, filter, bson.D{
+		{Key: "$set", Value: updateObject},
+	}, &opt); err != nil {
+		log.Fatal("Error on UpdateUpdateAt fn")
+	}
 }
 
 func UpdateLastLogin(user_id string) {

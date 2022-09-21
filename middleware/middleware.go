@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 
+	"github.com/AbhinayNarayanSingh/core/locals"
 	"github.com/AbhinayNarayanSingh/core/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -19,7 +20,7 @@ func AuthenticationMiddleware() gin.HandlerFunc {
 		claims, err := utils.ValidateToken(clientToken)
 
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Bad request"})
+			c.JSON(http.StatusBadRequest, gin.H{"message": locals.InternalServerError})
 			c.Abort()
 			return
 		}

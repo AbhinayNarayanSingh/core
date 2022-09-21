@@ -31,3 +31,11 @@ type OTP struct {
 	Phone   *string            `json:"phone"`
 	OTP     *string            `json:"otp"`
 }
+
+type PasswordUpdate struct {
+	Email       *string `json:"email"`
+	OldPassword *string `json:"old_password" validate:"required"`
+	NewPassword *string `json:"new_password" validate:"required"`
+	OTP         *string `json:"otp"`
+	User_Id     *string `json:"user_id"`
+}
