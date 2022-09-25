@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="worked on password reset api"
+title="worked auth controller"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`

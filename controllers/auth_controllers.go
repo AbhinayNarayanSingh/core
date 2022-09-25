@@ -52,14 +52,11 @@ func SignUp() gin.HandlerFunc {
 			c.JSON(400, gin.H{"message": err.Error()})
 			return
 		} else if count > 0 {
-			c.JSON(400, gin.H{"message": locals.EmailNotRegistered})
+			c.JSON(400, gin.H{"message": locals.PhoneAssociateWithAccount})
 			return
 		}
 
 		user.ID = primitive.NewObjectID()
-		userId := user.ID.Hex()
-
-		user.User_Id = &userId
 
 		password, _ := utils.HashPassword(*user.Password)
 		user.Password = &password
@@ -85,23 +82,24 @@ func SignUp() gin.HandlerFunc {
 
 func SignIn() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var user models.User
+		var payload models.User
+
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
 		var foundUser models.User
 
-		if err := c.BindJSON(&user); err != nil {
+		if err := c.BindJSON(&payload); err != nil {
 			c.JSON(400, gin.H{"message": locals.InternalServerError})
 			return
 		}
 
-		if err := userCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser); err != nil {
+		if err := userCollection.FindOne(ctx, bson.M{"email": payload.Email}).Decode(&foundUser); err != nil {
 			c.JSON(400, gin.H{"message": locals.EmailNotRegistered})
 			return
 		}
 
-		if isPasswordCorrect, _ := utils.VerifyPassword(*user.Password, *foundUser.Password); !isPasswordCorrect {
+		if isPasswordCorrect, _ := utils.VerifyPassword(*payload.Password, *foundUser.Password); !isPasswordCorrect {
 			c.JSON(401, gin.H{"message": locals.InvalidPassword})
 			return
 		}
@@ -119,7 +117,7 @@ func SignIn() gin.HandlerFunc {
 			c.JSON(400, gin.H{"message": err})
 			return
 		}
-		utils.UpdateLastLogin(userId)
+		utils.UpdateLastLogin(&foundUser.ID)
 
 		foundUser.Token = &token
 		foundUser.Refersh_token = &refershToken
@@ -130,19 +128,20 @@ func SignIn() gin.HandlerFunc {
 
 func OTPGenerator() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var otp models.OTP
+		var payload models.OTP
+
 		var user models.User
 		var updateObject primitive.D
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		if err := c.BindJSON(&otp); err != nil {
+		if err := c.BindJSON(&payload); err != nil {
 			c.JSON(400, gin.H{"message": err.Error()})
 			return
 		}
 
-		if err := userCollection.FindOne(ctx, bson.M{"phone": otp.Phone}).Decode(&user); err != nil {
+		if err := userCollection.FindOne(ctx, bson.M{"phone": payload.Phone}).Decode(&user); err != nil {
 			c.JSON(400, gin.H{"message": locals.PhoneNotRegistered})
 			return
 		}
@@ -155,15 +154,15 @@ func OTPGenerator() gin.HandlerFunc {
 		}
 
 		hashOTP, _ := utils.HashPassword(generatedOTP)
-		otp.OTP = &hashOTP
+		payload.OTP = &hashOTP
 		updateObject = append(updateObject, bson.E{Key: "otp", Value: &hashOTP})
 
-		if count, err := otpCollection.CountDocuments(ctx, bson.M{"phone": otp.Phone}); err != nil {
+		if count, err := otpCollection.CountDocuments(ctx, bson.M{"phone": payload.Phone}); err != nil {
 			c.JSON(400, gin.H{"message": err.Error()})
 			return
 		} else if count > 0 {
 			upsert := true
-			filter := bson.M{"phone": otp.Phone}
+			filter := bson.M{"phone": payload.Phone}
 			update := bson.D{
 				{Key: "$set", Value: updateObject},
 			}
@@ -180,13 +179,11 @@ func OTPGenerator() gin.HandlerFunc {
 			return
 		}
 
-		otp.User_Id = user.User_Id
+		payload.User_Id = user.ID
 
-		otp.ID = primitive.NewObjectID()
-		otpHexID := otp.ID.Hex()
-		otp.OTP_Id = &otpHexID
+		payload.ID = primitive.NewObjectID()
 
-		_, err := otpCollection.InsertOne(ctx, otp)
+		_, err := otpCollection.InsertOne(ctx, payload)
 
 		if err != nil {
 			c.JSON(400, gin.H{"message": locals.InternalServerError})
@@ -198,43 +195,44 @@ func OTPGenerator() gin.HandlerFunc {
 
 func OTPVerify() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var otp models.OTP
-		var otpObj models.OTP
+		var payload models.OTP
 
 		var user models.User
+
+		var otpObj models.OTP
 		var updateObject primitive.D
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
 		// post body render
-		if err := c.BindJSON(&otp); err != nil {
+		if err := c.BindJSON(&payload); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 		}
 
 		// finding user object in user model
-		if err := userCollection.FindOne(ctx, bson.M{"phone": otp.Phone}).Decode(&user); err != nil {
+		if err := userCollection.FindOne(ctx, bson.M{"phone": payload.Phone}).Decode(&user); err != nil {
 			c.JSON(400, gin.H{"message": locals.PhoneNotRegistered})
 			return
 		}
 
 		// searching user phone details in otp models
-		if err := otpCollection.FindOne(ctx, bson.M{"phone": otp.Phone}).Decode(&otpObj); err != nil {
+		if err := otpCollection.FindOne(ctx, bson.M{"phone": payload.Phone}).Decode(&otpObj); err != nil {
 			c.JSON(400, gin.H{"message": locals.OTPNotGenerated})
 			return
 		}
 
 		// verifying otp
-		if isOTPCorrect, _ := utils.VerifyPassword(*otp.OTP, *otpObj.OTP); !isOTPCorrect {
+		if isOTPCorrect, _ := utils.VerifyPassword(*payload.OTP, *otpObj.OTP); !isOTPCorrect {
 			c.JSON(401, gin.H{"message": locals.OTPInvalid})
 			return
 		}
 
-		updateObject = append(updateObject, bson.E{Key: "isactive", Value: true})
+		updateObject = append(updateObject, bson.E{Key: "is_active", Value: true})
 
 		upsert := true
-		filter := bson.M{"phone": otp.Phone}
+		filter := bson.M{"phone": payload.Phone}
 		opt := options.UpdateOptions{
 			Upsert: &upsert,
 		}
@@ -313,7 +311,7 @@ func UpdatePassword() gin.HandlerFunc {
 		}
 
 		// here we update update_at
-		utils.UpdateUpdateAt(uid)
+		utils.UpdateUpdateAt(&foundUser.ID)
 
 		c.JSON(http.StatusOK, gin.H{"message": "password change sucessfull"})
 	}
@@ -346,7 +344,7 @@ func ResetPasswordInitiator() gin.HandlerFunc {
 		}
 		hashOTP, _ := utils.HashPassword(generatedOTP)
 		payload.OTP = &hashOTP
-		payload.User_Id = foundUser.User_Id
+		payload.User_Id = foundUser.ID
 
 		// add otp details to PasswordResetCollection
 		if _, err := resetPasswordCollection.InsertOne(ctx, payload); err != nil {
@@ -404,7 +402,7 @@ func ResetPassword() gin.HandlerFunc {
 		}
 
 		// here we update update_at
-		utils.UpdateUpdateAt(*foundResetPasswordInstance.User_Id)
+		utils.UpdateUpdateAt(&foundResetPasswordInstance.User_Id)
 
 		// here we're deleting otp instance from resetPasswordCollection
 		_, err := resetPasswordCollection.DeleteOne(ctx, filter)

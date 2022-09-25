@@ -1,0 +1,101 @@
+Mongo driver Doxumentation: https://www.mongodb.com/docs/drivers/go/current/quick-start/
+
+Context: Context is like a timeout or deadline that indicates when an operation should stop running and return. It helps to prevent performance degradation on production systems when specific operations are running slow.
+
+Cursor: ?
+
+BSON: BSON (Binary-encoded JSON) is how documents are represented in a MongoDB database and the bson package is what helps us work with BSON objects in Go. 
+
+omitempty: The omitempty means that if there is no data in the particular field, when saved to MongoDB the field will not exist on the document rather than existing with an empty value.
+
+    ...
+    Title  string             `bson:"title,omitempty"`
+    ...
+
+
+
+
+
+
+
+
+
+
+
+InsertOne()/InsertMany(): To insert only one document, we can use insertOne method and to insert multiple documents together, we can use insertMany method
+
+    ...
+    akash := Person{"Akash", 28, "Bengaluru"}
+    res, err := collection. InsertOne (ctx, akash)
+    ...
+
+    ...
+    persons := []interface{}{akash, bob, robin}
+    res, err := collection.InsertMany(ctx, persons)
+    ...
+
+FindOne()/Find(): the FindOne to retrieve one and Find method to retrieve all the matching documents.
+
+    ...
+    var result Person
+    filter := bson.D{{"name", "Akash"}}
+    err := collection.FindOne(ctx, filter).Decode(&result)
+    ...
+
+    ...
+    findOptions := options.Find()
+    findOptions.SetLimit(2)
+    var results []*Person
+    cur, err := collection.Find(ctx, bson.D{{}}, findOptions)
+    ...
+
+SetProjection(): A projection specifies which fields to return in matched documents. It contains field names followed by a 1 (to include) or 0 (to exclude). Projections can only include or exclude fields.
+
+    ...
+    opts := options.Find().SetProjection(bson.D{{"_id", 0}})
+    result, err := collection.Find(context.TODO(), bson.D{}, opts)
+
+
+FindOneAndUpdate(): FindOneAndUpdate() method. It allows you to locate a document in a collection and update some or all of its properties. This method requires a filter to locate the document and an update document to describe the operation. 
+
+    ...
+    filter := bson.D{primitive.E{Key: "text", Value: text}}
+
+    update := bson.D{primitive.E{Key: "$set", Value: bson.D{
+        primitive.E{Key: "completed", Value: true},
+    }}}
+
+    t := &Task{}
+    return collection.FindOneAndUpdate(ctx, filter, update).Decode(t)
+    ...
+
+UpdateOne(): UpdateOne method with bson filter object
+
+    ...
+    updateResult, err := collection.UpdateOne(ctx, filter, update)
+    ...
+
+DeleteOne()/DeleteMany(): For deleting documents from any collection
+
+
+
+snippits:
+
+    cursor, err := episodesCollection.Find(ctx, bson.M{"duration": bson.D{{"$gt", 25}}})
+
+    // following code create primitive objectId
+        user.ID = primitive.NewObjectID()
+    
+    // following code convert primitive object id to string id
+		userId := user.ID.Hex()
+
+    // following code convert string id to primitive object id 
+        id, _ := primitive.ObjectIDFromHex("5eb3d668b31de5d588f42a7a")
+
+
+Important Article:
+
+    https://www.mongodb.com/blog/post/quick-start-golang--mongodb--how-to-read-documents
+    
+
+

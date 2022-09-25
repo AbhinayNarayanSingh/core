@@ -12,6 +12,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// MONGO_DRIVER_DOC = https://www.mongodb.com/docs/drivers/go/current/quick-start/
+
+var db_Name string = "golang-core"
+
 func DatabaseConfig() *mongo.Client {
 
 	if err := godotenv.Load(".env"); err != nil {
@@ -40,7 +44,8 @@ func DatabaseConfig() *mongo.Client {
 
 var Client *mongo.Client = DatabaseConfig()
 
+// following code to create a database
 func OpenCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-	var collection *mongo.Collection = client.Database("cluster0").Collection(collectionName)
+	var collection *mongo.Collection = client.Database(db_Name).Collection(collectionName)
 	return collection
 }

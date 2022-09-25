@@ -112,7 +112,7 @@ func VerifyPassword(userEnteredPassword string, password string) (bool, string) 
 	return isPasswordCorrect, msg
 }
 
-func UpdateUpdateAt(user_id string) {
+func UpdateUpdateAt(user_id *primitive.ObjectID) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
@@ -122,7 +122,7 @@ func UpdateUpdateAt(user_id string) {
 	updateObject = append(updateObject, bson.E{Key: "updated_at", Value: currentDateTime})
 
 	upsert := true
-	filter := bson.M{"user_id": user_id}
+	filter := bson.M{"_id": user_id}
 	opt := options.UpdateOptions{
 		Upsert: &upsert,
 	}
@@ -134,7 +134,7 @@ func UpdateUpdateAt(user_id string) {
 	}
 }
 
-func UpdateLastLogin(user_id string) {
+func UpdateLastLogin(user_id *primitive.ObjectID) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
@@ -144,7 +144,7 @@ func UpdateLastLogin(user_id string) {
 	updateObject = append(updateObject, bson.E{Key: "last_login", Value: currentDateTime})
 
 	upsert := true
-	filter := bson.M{"user_id": user_id}
+	filter := bson.M{"_id": user_id}
 	opt := options.UpdateOptions{
 		Upsert: &upsert,
 	}
@@ -165,14 +165,9 @@ func ValidateToken(providedToken string) (*JWTClaims, error) {
 		return nil, err
 	}
 
-	claims, ok := token.Claims.(*JWTClaims)
-	if !ok {
-		log.Fatal("token wrong")
-		return nil, nil
-	}
+	claims, _ := token.Claims.(*JWTClaims)
 
 	if claims.ExpiresAt < time.Now().Local().Unix() {
-		log.Fatal("token expired")
 		return nil, nil
 	}
 	return claims, nil
