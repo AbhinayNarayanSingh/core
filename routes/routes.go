@@ -20,7 +20,11 @@ func Path(router *gin.Engine) {
 
 	router.GET("/users", controllers.GetUsers())
 
+	// Admin level required
 	router.POST("/products", controllers.ProductCreate())
+	router.DELETE("/products", controllers.ProductDelete())
+
+	router.POST("/product", controllers.ProductGet())
 }
 
 func SecurePath(router *gin.Engine) {
