@@ -58,7 +58,7 @@ func AuthenticateUser(c *gin.Context, userId string) (err error) {
 	return err
 }
 
-func GenerateJWTToken(ID string, Email string, FirstName string, LastName string, Phone string, IsAdmin bool, IsActive bool) (string, string, error) {
+func GenerateJWTToken(ID string, Email string, FirstName string, LastName string, Phone string, IsAdmin bool, IsActive bool) (string, error) {
 	claims := &JWTClaims{
 		Email:     Email,
 		ID:        ID,
@@ -72,23 +72,12 @@ func GenerateJWTToken(ID string, Email string, FirstName string, LastName string
 		},
 	}
 
-	refreshClaims := &JWTClaims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(720)).Unix(),
-		},
-	}
-
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(JWT_SECRET_KEY))
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	refershToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(JWT_SECRET_KEY))
-	if err != nil {
-		return "", "", err
-	}
-
-	return token, refershToken, err
+	return token, err
 }
 
 func HashPassword(password string) (string, error) {

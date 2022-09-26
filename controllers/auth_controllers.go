@@ -111,7 +111,7 @@ func SignIn() gin.HandlerFunc {
 
 		userId := foundUser.ID.Hex()
 
-		token, refershToken, _ := utils.GenerateJWTToken(userId, *foundUser.Email, *foundUser.FirstName, *foundUser.LastName, *foundUser.Phone, *foundUser.IsAdmin, *foundUser.IsActive)
+		token, _ := utils.GenerateJWTToken(userId, *foundUser.Email, *foundUser.FirstName, *foundUser.LastName, *foundUser.Phone, *foundUser.IsAdmin, *foundUser.IsActive)
 
 		if err := userCollection.FindOne(ctx, bson.M{"_id": foundUser.ID}).Decode(&foundUser); err != nil {
 			c.JSON(400, gin.H{"message": err})
@@ -120,7 +120,6 @@ func SignIn() gin.HandlerFunc {
 		utils.UpdateLastLogin(&foundUser.ID)
 
 		foundUser.Token = &token
-		foundUser.Refersh_token = &refershToken
 
 		c.JSON(200, foundUser)
 	}
