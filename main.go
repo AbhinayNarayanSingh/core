@@ -19,6 +19,7 @@ func main() {
 
 	// Helper function to return a URL pattern
 	routes.Path(router)
+	routes.AdminSecurePath(router)
 	routes.SecurePath(router)
 
 	router.Run(":" + port)

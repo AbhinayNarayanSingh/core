@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="worked on code modular"
+title="worked on product api"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`

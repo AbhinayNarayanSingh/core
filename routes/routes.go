@@ -18,13 +18,9 @@ func Path(router *gin.Engine) {
 	router.POST("/user/password/reset", controllers.ResetPasswordInitiator())
 	router.POST("/user/password/reset/verify", controllers.ResetPassword())
 
-	router.GET("/users", controllers.GetUsers())
-
-	// Admin level required
-	router.POST("/products", controllers.ProductCreate())
-	router.DELETE("/products", controllers.ProductDelete())
-
 	router.POST("/product", controllers.ProductGet())
+
+	router.PATCH("/products", controllers.ProductUpdate())
 }
 
 func SecurePath(router *gin.Engine) {
@@ -32,4 +28,12 @@ func SecurePath(router *gin.Engine) {
 
 	router.POST("/user/password", controllers.UpdatePassword())
 	router.GET("/users/:user_id", controllers.GetUserByID())
+}
+
+func AdminSecurePath(router *gin.Engine) {
+
+	router.GET("/users", controllers.GetUsers())
+
+	router.POST("/products", controllers.ProductCreate())
+	router.DELETE("/products", controllers.ProductDelete())
 }

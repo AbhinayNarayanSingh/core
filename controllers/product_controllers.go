@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var productCollection *mongo.Collection = config.OpenCollection(config.Client, "products")
@@ -27,8 +28,8 @@ func ProductCreate() gin.HandlerFunc {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		if err := c.BindJSON(&payload); err != nil {
-			c.JSON(400, gin.H{"message": locals.InternalServerError, "details": err.Error()})
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": locals.InternalServerError, "details": err.Error()})
 			return
 		}
 
@@ -107,6 +108,44 @@ func ProductDelete() gin.HandlerFunc {
 	}
 }
 
+// update product
+func ProductUpdate() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var payload models.ProductPayload
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": locals.InternalServerError})
+		}
+
+		Product_UID, _ := primitive.ObjectIDFromHex(*payload.Product_ID)
+
+		var UpdateProductDetailsFn = func() {
+			upsert := true
+			filter := bson.M{"_id": Product_UID}
+			update := bson.D{
+				{Key: "$set", Value: payload.ProductDetail},
+			}
+			opts := options.UpdateOptions{
+				Upsert: &upsert,
+			}
+
+			fmt.Println("3")
+			if res, err := productCollection.UpdateOne(ctx, filter, update, &opts); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"message": locals.InternalServerError})
+			} else {
+				fmt.Println(res)
+			}
+		}
+
+		UpdateProductDetailsFn()
+		c.JSON(http.StatusOK, gin.H{"message": "Done"})
+
+	}
+}
+
 // get product_images
 func ProductGet() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -164,10 +203,9 @@ func ProductGet() gin.HandlerFunc {
 	}
 }
 
-// get product_price
-
-// get product_details
-
-// update product
-
-// update price
+// c.AbortWithStatusJSON(http.StatusInternalServerError, &map[string](interface{}){
+// 	"status":  "error",
+// 	"code":    "500",
+// 	"message": "Internal server error",
+// 	"error": err,
+// })

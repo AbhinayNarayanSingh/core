@@ -5,6 +5,9 @@ import (
 )
 
 // Products Models
+type Category struct {
+	ID primitive.ObjectID `bson:"_id,omitempty"`
+}
 
 type ProductPayload struct {
 	ProductDetail
