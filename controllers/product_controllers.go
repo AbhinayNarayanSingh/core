@@ -17,7 +17,7 @@ import (
 )
 
 var productCollection *mongo.Collection = config.OpenCollection(config.Client, "products")
-var productPriceCollection *mongo.Collection = config.OpenCollection(config.Client, "product_prices")
+var productVarientsCollection *mongo.Collection = config.OpenCollection(config.Client, "product_varients")
 var productImageCollection *mongo.Collection = config.OpenCollection(config.Client, "product_images")
 
 // create product, productPrice, productImage
@@ -34,20 +34,11 @@ func ProductCreate() gin.HandlerFunc {
 		}
 
 		Product_UID := primitive.NewObjectID()
-
 		payload.ProductDetail.ID = Product_UID
+		payload.Varients.Product_ID = Product_UID
 
-		for _, item := range *payload.Product_Price {
-			var newProductPrice models.ProductPrice
-			Price_UID := primitive.NewObjectID()
-
-			newProductPrice = item
-			newProductPrice.ID = Price_UID
-			newProductPrice.Product_ID = Product_UID
-
-			if _, err := productPriceCollection.InsertOne(ctx, newProductPrice); err != nil {
-				fmt.Println("error during insertion of product price")
-			}
+		if _, err := productVarientsCollection.InsertOne(ctx, payload.Varients); err != nil {
+			fmt.Println("error during insertion of product varients")
 		}
 
 		for _, item := range *payload.Product_Images {
@@ -70,7 +61,7 @@ func ProductCreate() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(200, gin.H{"message": Product_UID})
+		c.JSON(200, gin.H{"message": payload})
 	}
 }
 
@@ -96,8 +87,8 @@ func ProductDelete() gin.HandlerFunc {
 
 		filter = bson.M{"product_id": product_id}
 
-		if _, err := productPriceCollection.DeleteMany(ctx, filter); err != nil {
-			fmt.Println("error occurs during productPriceCollection.DeleteMany")
+		if _, err := productVarientsCollection.DeleteMany(ctx, filter); err != nil {
+			fmt.Println("error occurs during productVarientsCollection.DeleteMany")
 		}
 
 		if _, err := productImageCollection.DeleteMany(ctx, filter); err != nil {
@@ -181,11 +172,11 @@ func ProductGet() gin.HandlerFunc {
 			c.JSON(200, gin.H{"response": result})
 		}
 
-		var GetProductPriceFn = func() {
-			filter := bson.M{"product_id": product_uid, "size": payload.Variant_Size}
+		var GetProductVarientsFn = func() {
+			filter := bson.M{"product_id": product_uid}
 
 			var result bson.M
-			if err := productPriceCollection.FindOne(ctx, filter).Decode(&result); err != nil {
+			if err := productVarientsCollection.FindOne(ctx, filter).Decode(&result); err != nil {
 				c.JSON(400, gin.H{"message": err})
 				return
 			}
@@ -198,7 +189,7 @@ func ProductGet() gin.HandlerFunc {
 		case 2:
 			GetProductImagesFn()
 		case 3:
-			GetProductPriceFn()
+			GetProductVarientsFn()
 		}
 	}
 }

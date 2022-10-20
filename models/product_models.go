@@ -11,14 +11,14 @@ type Category struct {
 
 type ProductPayload struct {
 	ProductDetail
-	Product_Images      *[]ProductImage `bson:"product_images,omitempty"`
-	Product_Accessories *[]string       `bson:"product_accessories,omitempty"`
-	Product_Price       *[]ProductPrice `bson:"product_price,omitempty"`
+	Varients       *Varients       `bson:"varients,omitempty"`
+	Product_Images *[]ProductImage `bson:"product_images,omitempty"`
 
-	Product_ID    *string `bson:"product_id,omitempty"`
-	Variant_Color *string `bson:"variant_color,omitempty"`
-	Variant_Size  *string `bson:"size_size,omitempty"`
-	Operation     int     `json:"operation,omitempty"`
+	Product_Accessories *[]string `bson:"product_accessories,omitempty"`
+	Product_ID          *string   `bson:"product_id,omitempty"`
+	Variant_Color       *string   `bson:"variant_color,omitempty"`
+	Variant_Size        *string   `bson:"size_size,omitempty"`
+	Operation           int       `json:"operation,omitempty"`
 }
 
 type ProductImage struct {
@@ -28,26 +28,31 @@ type ProductImage struct {
 	Images     *[]string          `bson:"images,omitempty"`
 }
 
-type ProductPrice struct {
-	ID                       primitive.ObjectID `bson:"_id,omitempty"`
-	Product_ID               primitive.ObjectID `bson:"product_id,omitempty"`
-	Size                     *string            `bson:"size,omitempty"`
-	MRP                      *int               `bson:"mrp,omitempty"`
-	Selling_Price            *int               `bson:"selling_price,omitempty"`
-	Selling_Price_Before_tax *int               `bson:"selling_price_before_tax,omitempty"`
-	Tax                      *int               `bson:"tax,omitempty"`
-	Discount                 *int               `bson:"discount,omitempty"`
+type Varients struct {
+	ID           primitive.ObjectID `bson:"_id,omitempty"`
+	Product_ID   primitive.ObjectID `bson:"product_id,omitempty"`
+	Storage      *[]ProductVarients `bson:"storage,omitempty"`
+	Finish       *[]ProductVarients `bson:"finish,omitempty"`
+	Model        *[]ProductVarients `bson:"model,omitempty"`
+	Memory       *[]ProductVarients `bson:"memory,omitempty"`
+	Processor    *[]ProductVarients `bson:"processor,omitempty"`
+	Connectivity *[]ProductVarients `bson:"connectivity,omitempty"`
+}
+type ProductVarients struct {
+	VarientName              *string `bson:"varientName,omitempty"`
+	VarientDiscription       *string `bson:"varientDiscription,omitempty"`
+	VarientAdditionalDetails *string `bson:"varientAdditionalDetails,omitempty"`
+	VarientAddonPrice        *int    `bson:"varientAddonPrice,omitempty"`
 }
 
 type ProductDetail struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty"`
 	Category       *string            `bson:"category,omitempty"`
 	Name           *string            `bson:"name,omitempty"`
-	Color          *[]Color           `bson:"color,omitempty"`
-	Size           *[]string          `bson:"size,omitempty"`
 	Specifications *[]Specifications  `bson:"specifications,omitempty"`
-	Product_Price  *[]ProductPrice    `bson:"product_price,omitempty"`
-	Product_Images *[]ProductImage    `bson:"product_images,omitempty"`
+	MRP            *int               `bson:"mrp,omitempty"`
+	Selling_Price  *int               `bson:"selling_price,omitempty"`
+	Discount       *int               `bson:"discount,omitempty"`
 }
 
 type Color struct {
