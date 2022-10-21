@@ -48,3 +48,15 @@ func AuthenticationMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func AdminAuthenticationMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		AuthenticationMiddleware()
+		isAdmin := c.GetBool("isAdmin")
+		if !isAdmin {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Admin authentication key required."})
+			c.Abort()
+			return
+		}
+	}
+}

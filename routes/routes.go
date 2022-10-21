@@ -19,8 +19,6 @@ func Path(router *gin.Engine) {
 	router.POST("/user/password/reset/verify", controllers.ResetPassword())
 
 	router.POST("/product", controllers.ProductGet())
-
-	router.PATCH("/products", controllers.ProductUpdate())
 }
 
 func SecurePath(router *gin.Engine) {
@@ -31,9 +29,11 @@ func SecurePath(router *gin.Engine) {
 }
 
 func AdminSecurePath(router *gin.Engine) {
+	// router.Use(middleware.AdminAuthenticationMiddleware())
 
 	router.GET("/users", controllers.GetUsers())
 
 	router.POST("/products", controllers.ProductCreate())
+	router.PATCH("/products", controllers.ProductUpdate())
 	router.DELETE("/products", controllers.ProductDelete())
 }

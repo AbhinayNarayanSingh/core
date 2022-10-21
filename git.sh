@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="product api code refactor"
+title="git ignore added"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`
