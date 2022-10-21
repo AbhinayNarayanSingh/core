@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="git ignore added"
+title="made changes to login with email as well as phone number & did code refector"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`

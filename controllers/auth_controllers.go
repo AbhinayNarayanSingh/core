@@ -83,19 +83,30 @@ func SignUp() gin.HandlerFunc {
 func SignIn() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload models.User
+		var foundUser models.User
+
+		payload.Operation = 1
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		var foundUser models.User
-
 		if err := c.BindJSON(&payload); err != nil {
-			c.JSON(400, gin.H{"message": locals.InternalServerError})
+			c.JSON(400, gin.H{"message": locals.BadRequest})
 			return
 		}
 
-		if err := userCollection.FindOne(ctx, bson.M{"email": payload.Email}).Decode(&foundUser); err != nil {
-			c.JSON(400, gin.H{"message": locals.EmailNotRegistered})
+		filter := bson.M{}
+		msg := locals.EmailNotRegistered
+		switch payload.Operation {
+		case 1:
+			filter = bson.M{"email": payload.Email}
+		case 2:
+			filter = bson.M{"phone": payload.Phone}
+			msg = locals.PhoneNotRegistered
+		}
+
+		if err := userCollection.FindOne(ctx, filter).Decode(&foundUser); err != nil {
+			c.JSON(400, gin.H{"message": msg})
 			return
 		}
 
@@ -113,11 +124,7 @@ func SignIn() gin.HandlerFunc {
 
 		token, _ := utils.GenerateJWTToken(userId, *foundUser.Email, *foundUser.FirstName, *foundUser.LastName, *foundUser.Phone, *foundUser.IsAdmin, *foundUser.IsActive)
 
-		if err := userCollection.FindOne(ctx, bson.M{"_id": foundUser.ID}).Decode(&foundUser); err != nil {
-			c.JSON(400, gin.H{"message": err})
-			return
-		}
-		utils.UpdateLastLogin(&foundUser.ID)
+		utils.UpdateTimeStampFn(userCollection, &foundUser.ID, "last_login")
 
 		foundUser.Token = &token
 
@@ -146,13 +153,12 @@ func OTPGenerator() gin.HandlerFunc {
 		}
 
 		// here we generate 6 digit otp
-		generatedOTP, error := utils.OTPGenerator(6)
+		hashOTP, generatedOTP, error := utils.OTPGenerator(6)
 		if error != nil {
 			c.JSON(400, gin.H{"message": locals.InternalServerError, "details": error})
 			return
 		}
 
-		hashOTP, _ := utils.HashPassword(generatedOTP)
 		payload.OTP = &hashOTP
 		updateObject = append(updateObject, bson.E{Key: "otp", Value: &hashOTP})
 
@@ -310,7 +316,7 @@ func UpdatePassword() gin.HandlerFunc {
 		}
 
 		// here we update update_at
-		utils.UpdateUpdateAt(&foundUser.ID)
+		utils.UpdateTimeStampFn(userCollection, &foundUser.ID, "updated_at")
 
 		c.JSON(http.StatusOK, gin.H{"message": "password change sucessfull"})
 	}
@@ -336,12 +342,11 @@ func ResetPasswordInitiator() gin.HandlerFunc {
 		}
 
 		// otp generate
-		generatedOTP, error := utils.OTPGenerator(6)
+		hashOTP, generatedOTP, error := utils.OTPGenerator(6)
 		if error != nil {
 			c.JSON(400, gin.H{"message": locals.InternalServerError, "details": error})
 			return
 		}
-		hashOTP, _ := utils.HashPassword(generatedOTP)
 		payload.OTP = &hashOTP
 		payload.User_Id = foundUser.ID
 
@@ -401,7 +406,7 @@ func ResetPassword() gin.HandlerFunc {
 		}
 
 		// here we update update_at
-		utils.UpdateUpdateAt(&foundResetPasswordInstance.User_Id)
+		utils.UpdateTimeStampFn(userCollection, &foundResetPasswordInstance.User_Id, "updated_at")
 
 		// here we're deleting otp instance from resetPasswordCollection
 		_, err := resetPasswordCollection.DeleteOne(ctx, filter)

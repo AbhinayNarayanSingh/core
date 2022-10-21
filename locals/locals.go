@@ -1,6 +1,7 @@
 package locals
 
 const (
+	BadRequest                = "Bad Request."
 	InternalServerError       = "Ops! something has gone wrong on the website's server, engineers are notified."
 	InvalidPassword           = "Invalid password, remember that passwords are case-sensitive."
 	EmailNotRegistered        = "Email address isn't associated with this account."

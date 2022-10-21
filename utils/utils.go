@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/AbhinayNarayanSingh/core/config"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
@@ -17,8 +16,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
-
-var userCollection *mongo.Collection = config.OpenCollection(config.Client, "users")
 
 var JWT_SECRET_KEY = os.Getenv("JWT_SECRET_KEY")
 
@@ -101,47 +98,23 @@ func VerifyPassword(userEnteredPassword string, password string) (bool, string) 
 	return isPasswordCorrect, msg
 }
 
-func UpdateUpdateAt(user_id *primitive.ObjectID) {
+func UpdateTimeStampFn(collection *mongo.Collection, user_id *primitive.ObjectID, update_feild string) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
 	var updateObject primitive.D
 
 	currentDateTime, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-	updateObject = append(updateObject, bson.E{Key: "updated_at", Value: currentDateTime})
+	updateObject = append(updateObject, bson.E{Key: update_feild, Value: currentDateTime})
 
 	upsert := true
 	filter := bson.M{"_id": user_id}
-	opt := options.UpdateOptions{
-		Upsert: &upsert,
-	}
+	opt := options.UpdateOptions{Upsert: &upsert}
 
-	if _, err := userCollection.UpdateOne(ctx, filter, bson.D{
+	if _, err := collection.UpdateOne(ctx, filter, bson.D{
 		{Key: "$set", Value: updateObject},
 	}, &opt); err != nil {
 		log.Fatal("Error on UpdateUpdateAt fn")
-	}
-}
-
-func UpdateLastLogin(user_id *primitive.ObjectID) {
-	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-	defer cancel()
-
-	var updateObject primitive.D
-
-	currentDateTime, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-	updateObject = append(updateObject, bson.E{Key: "last_login", Value: currentDateTime})
-
-	upsert := true
-	filter := bson.M{"_id": user_id}
-	opt := options.UpdateOptions{
-		Upsert: &upsert,
-	}
-
-	if _, err := userCollection.UpdateOne(ctx, filter, bson.D{
-		{Key: "$set", Value: updateObject},
-	}, &opt); err != nil {
-		log.Fatal("Error on UpdateLastLogin fn")
 	}
 }
 
@@ -162,19 +135,19 @@ func ValidateToken(providedToken string) (*JWTClaims, error) {
 	return claims, nil
 }
 
-func OTPGenerator(length int) (string, error) {
+func OTPGenerator(length int) (string, string, error) {
 	otpChars := "1234567890"
 	buffer := make([]byte, length)
 
 	_, err := rand.Read(buffer)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	otpCharsLength := len(otpChars)
 	for i := 0; i < length; i++ {
 		buffer[i] = otpChars[int(buffer[i])%otpCharsLength]
 	}
-
-	return string(buffer), nil
+	hashOTP, _ := HashPassword(string(buffer))
+	return hashOTP, string(buffer), nil
 }
