@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="made changes to login with email as well as phone number & did code refector"
+title="made code more reuseable"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`
