@@ -20,7 +20,7 @@ var productCollection *mongo.Collection = config.OpenCollection(config.Client, "
 var productVarientsCollection *mongo.Collection = config.OpenCollection(config.Client, "product_varients")
 var productImageCollection *mongo.Collection = config.OpenCollection(config.Client, "product_images")
 
-// create product, productPrice, productImage
+// create product
 func ProductCreate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload models.ProductPayload
@@ -65,7 +65,7 @@ func ProductCreate() gin.HandlerFunc {
 	}
 }
 
-// delete product, productPrice, productImage
+// delete product
 func ProductDelete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload models.ProductPayload
@@ -113,31 +113,34 @@ func ProductUpdate() gin.HandlerFunc {
 
 		Product_UID, _ := primitive.ObjectIDFromHex(*payload.Product_ID)
 
-		var UpdateProductDetailsFn = func() {
+		var UpdateProductFn = func(collection *mongo.Collection, update *bson.D) {
 			upsert := true
-			filter := bson.M{"_id": Product_UID}
-			update := bson.D{
-				{Key: "$set", Value: payload.ProductDetail},
-			}
-			opts := options.UpdateOptions{
-				Upsert: &upsert,
+			filter := bson.M{"product_id": Product_UID}
+			opts := options.UpdateOptions{Upsert: &upsert}
+
+			if _, err := collection.UpdateOne(ctx, filter, update, &opts); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"message": locals.InternalServerError})
 			}
 
-			fmt.Println("3")
-			if res, err := productCollection.UpdateOne(ctx, filter, update, &opts); err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"message": locals.InternalServerError})
-			} else {
-				fmt.Println(res)
-			}
+			c.JSON(http.StatusOK, gin.H{"message": "Done"})
 		}
 
-		UpdateProductDetailsFn()
-		c.JSON(http.StatusOK, gin.H{"message": "Done"})
+		switch payload.Operation {
+		case 1:
+			update := bson.D{{Key: "$set", Value: payload.ProductDetail}}
+			UpdateProductFn(productCollection, &update)
+		case 2:
+			update := bson.D{{Key: "$set", Value: payload.Varients}}
+			UpdateProductFn(productVarientsCollection, &update)
+		case 3:
+			update := bson.D{{Key: "$set", Value: payload.Product_Images}}
+			UpdateProductFn(productImageCollection, &update)
+		}
 
 	}
 }
 
-// get product_images
+// get product
 func ProductGet() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload models.ProductPayload
@@ -152,31 +155,9 @@ func ProductGet() gin.HandlerFunc {
 
 		product_uid, _ := primitive.ObjectIDFromHex(*payload.Product_ID)
 
-		var GetProductDetailsFn = func() {
-			filter := bson.M{"_id": product_uid}
+		var GetProductsFn = func(collection *mongo.Collection, filter *bson.M) {
 			var result bson.M
-			if err := productCollection.FindOne(ctx, filter).Decode(&result); err != nil {
-				c.JSON(400, gin.H{"message": err})
-			}
-			c.JSON(200, gin.H{"response": result})
-		}
-
-		var GetProductImagesFn = func() {
-			filter := bson.M{"product_id": product_uid, "variant": payload.Variant_Color}
-
-			var result bson.M
-			if err := productImageCollection.FindOne(ctx, filter).Decode(&result); err != nil {
-				c.JSON(400, gin.H{"message": err})
-				return
-			}
-			c.JSON(200, gin.H{"response": result})
-		}
-
-		var GetProductVarientsFn = func() {
-			filter := bson.M{"product_id": product_uid}
-
-			var result bson.M
-			if err := productVarientsCollection.FindOne(ctx, filter).Decode(&result); err != nil {
+			if err := collection.FindOne(ctx, filter).Decode(&result); err != nil {
 				c.JSON(400, gin.H{"message": err})
 				return
 			}
@@ -185,18 +166,14 @@ func ProductGet() gin.HandlerFunc {
 
 		switch payload.Operation {
 		case 1:
-			GetProductDetailsFn()
+			filter := bson.M{"_id": product_uid}
+			GetProductsFn(productCollection, &filter)
 		case 2:
-			GetProductImagesFn()
+			filter := bson.M{"product_id": product_uid}
+			GetProductsFn(productVarientsCollection, &filter)
 		case 3:
-			GetProductVarientsFn()
+			filter := bson.M{"product_id": product_uid, "variant": payload.Variant_Color}
+			GetProductsFn(productImageCollection, &filter)
 		}
 	}
 }
-
-// c.AbortWithStatusJSON(http.StatusInternalServerError, &map[string](interface{}){
-// 	"status":  "error",
-// 	"code":    "500",
-// 	"message": "Internal server error",
-// 	"error": err,
-// })
