@@ -6,7 +6,15 @@ import (
 
 // Products Models
 type Category struct {
-	ID primitive.ObjectID `bson:"_id,omitempty"`
+	ID      primitive.ObjectID `bson:"_id,omitempty"`
+	Name    *string            `bson:"name,omitempty"`
+	Icon    *string            `bson:"icon,omitempty"`
+	HSN     *string            `bson:"hsn,omitempty"`
+	Taxable *string            `bson:"taxable,omitempty"`
+	IGST    *string            `bson:"igst,omitempty"`
+	CGST    *string            `bson:"cgst,omitempty"`
+	SGST    *string            `bson:"sgst,omitempty"`
+	Cess    *string            `bson:"cess,omitempty"`
 }
 
 type ProductPayload struct {

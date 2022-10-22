@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="made code more reuseable"
+title="new models introduced"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`

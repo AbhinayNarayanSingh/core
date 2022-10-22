@@ -132,7 +132,7 @@ func SignIn() gin.HandlerFunc {
 	}
 }
 
-func OTPGenerator() gin.HandlerFunc {
+func SignUpVerificationInitiator() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload models.OTP
 
@@ -198,7 +198,7 @@ func OTPGenerator() gin.HandlerFunc {
 	}
 }
 
-func OTPVerify() gin.HandlerFunc {
+func SignUpVerification() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload models.OTP
 
