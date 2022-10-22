@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="new models introduced"
+title="terminal clear added"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`
@@ -80,3 +80,5 @@ then
 else
     echo "script execution terminated ..."
 fi
+
+clear
