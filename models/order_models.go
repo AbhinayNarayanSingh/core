@@ -12,6 +12,7 @@ type Order struct {
 	Address_ID        primitive.ObjectID `bson:"address_id,omitempty"`
 	Transaction_ID    primitive.ObjectID `bson:"transaction_id,omitempty"`
 	Tracking_ID       primitive.ObjectID `bson:"tracking_id,omitempty"`
+	Tracking_Number   *string            `bson:"trackingNumber,omitempty"`
 	OrderNumber       *string            `bson:"orderNumber,omitempty"`
 	Total             *int               `bson:"total,omitempty"`
 	Shipping          *int               `bson:"shipping,omitempty"`
@@ -43,7 +44,7 @@ type Tracking struct {
 	Weight                  *int               `bson:"weight,omitempty"`
 	Description             *string            `bson:"description,omitempty"`
 	IsInternationalDelivery *bool              `bson:"international_delivery,omitempty"`
-	Expected_Delivery_at    time.Time          `bson:"expected_delivery,omitempty"`
+	Expected_Delivery_Date  time.Time          `bson:"expectedDeliveryDate,omitempty"`
 	Created_at              time.Time          `bson:"created_at,omitempty"`
 	Updated_at              time.Time          `bson:"updated_at,omitempty"`
 }

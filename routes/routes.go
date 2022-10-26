@@ -19,6 +19,7 @@ func Path(router *gin.Engine) {
 	router.POST("/user/password/reset/verify", controllers.ResetPassword())
 
 	router.POST("/product", controllers.ProductGet())
+	router.POST("/address", controllers.SaveAddress())
 }
 
 func SecurePath(router *gin.Engine) {

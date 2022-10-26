@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="terminal clear added"
+title="made dynamic varients on api payload & intruduce few new models"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`

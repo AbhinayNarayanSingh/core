@@ -24,20 +24,22 @@ var productImageCollection *mongo.Collection = config.OpenCollection(config.Clie
 func ProductCreate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload models.ProductPayload
+		var productVarients models.ProductVarients
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
 		if err := c.ShouldBindJSON(&payload); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": locals.InternalServerError, "details": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": locals.BadRequest, "details": err.Error()})
 			return
 		}
 
 		Product_UID := primitive.NewObjectID()
 		payload.ProductDetail.ID = Product_UID
-		payload.Varients.Product_ID = Product_UID
+		productVarients.Product_ID = Product_UID
+		productVarients.Varients = payload.Varients
 
-		if _, err := productVarientsCollection.InsertOne(ctx, payload.Varients); err != nil {
+		if _, err := productVarientsCollection.InsertOne(ctx, productVarients); err != nil {
 			fmt.Println("error during insertion of product varients")
 		}
 
@@ -61,7 +63,7 @@ func ProductCreate() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(200, gin.H{"message": payload})
+		c.JSON(200, gin.H{"message": "done"})
 	}
 }
 
@@ -74,7 +76,7 @@ func ProductDelete() gin.HandlerFunc {
 		defer cancel()
 
 		if err := c.BindJSON(&payload); err != nil {
-			c.JSON(400, gin.H{"message": locals.InternalServerError, "details": err.Error()})
+			c.JSON(400, gin.H{"message": locals.BadRequest})
 			return
 		}
 
@@ -149,7 +151,7 @@ func ProductGet() gin.HandlerFunc {
 		defer cancel()
 
 		if err := c.BindJSON(&payload); err != nil {
-			c.JSON(400, gin.H{"message": locals.InternalServerError, "details": err.Error()})
+			c.JSON(400, gin.H{"message": locals.BadRequest, "details": err.Error()})
 			return
 		}
 

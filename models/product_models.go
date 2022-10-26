@@ -19,14 +19,13 @@ type Category struct {
 
 type ProductPayload struct {
 	ProductDetail
-	Varients       *ProductVarients `bson:"varients,omitempty"`
-	Product_Images *[]ProductImage  `bson:"product_images,omitempty"`
-
-	Product_Accessories *[]string `bson:"product_accessories,omitempty"`
-	Product_ID          *string   `bson:"product_id,omitempty"`
-	Variant_Color       *string   `bson:"variant_color,omitempty"`
-	Variant_Size        *string   `bson:"size_size,omitempty"`
-	Operation           int       `json:"operation,omitempty"`
+	Varients            *map[string][]Varients `bson:"varients,omitempty"`
+	Product_Images      *[]ProductImage        `bson:"product_images,omitempty"`
+	Product_Accessories *[]string              `bson:"product_accessories,omitempty"`
+	Product_ID          *string                `bson:"product_id,omitempty"`
+	Variant_Color       *string                `bson:"variant_color,omitempty"`
+	Variant_Size        *string                `bson:"size_size,omitempty"`
+	Operation           int                    `json:"operation,omitempty"`
 }
 
 type ProductImage struct {
@@ -37,14 +36,9 @@ type ProductImage struct {
 }
 
 type ProductVarients struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty"`
-	Product_ID   primitive.ObjectID `bson:"product_id,omitempty"`
-	Storage      *[]Varients        `bson:"storage,omitempty"`
-	Finish       *[]Varients        `bson:"finish,omitempty"`
-	Model        *[]Varients        `bson:"model,omitempty"`
-	Memory       *[]Varients        `bson:"memory,omitempty"`
-	Processor    *[]Varients        `bson:"processor,omitempty"`
-	Connectivity *[]Varients        `bson:"connectivity,omitempty"`
+	ID         primitive.ObjectID     `bson:"_id,omitempty"`
+	Product_ID primitive.ObjectID     `bson:"product_id,omitempty"`
+	Varients   *map[string][]Varients `bson:"varients,omitempty"`
 }
 type Varients struct {
 	Name              *string `bson:"name,omitempty"`

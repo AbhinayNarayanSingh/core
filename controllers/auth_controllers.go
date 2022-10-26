@@ -61,9 +61,7 @@ func SignUp() gin.HandlerFunc {
 		password, _ := utils.HashPassword(*user.Password)
 		user.Password = &password
 
-		user.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-		user.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-		user.Last_login, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+		user.Created_at = utils.TimeStampFn()
 
 		false := false
 		user.IsActive = &false

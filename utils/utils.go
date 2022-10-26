@@ -118,6 +118,11 @@ func UpdateTimeStampFn(collection *mongo.Collection, user_id *primitive.ObjectID
 	}
 }
 
+func TimeStampFn() time.Time {
+	TimeTime, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+	return TimeTime
+}
+
 func ValidateToken(providedToken string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(providedToken, &JWTClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return []byte(JWT_SECRET_KEY), nil
