@@ -10,7 +10,11 @@ const (
 	PhoneAssociateWithAccount = "Phone number is already associated with an account."
 	AccountNotActivated       = "Account activation required to continue."
 	AccountActivated          = "Your account has been activated successfully, proceed with signing."
-	OTPSend                   = "A OTP (One Time Password) has been sent on your phone number."
+	OTPSendOnPhone            = "A OTP (One Time Password) has been sent on your phone number."
+	OTPSendOnEmail            = "A OTP (One Time Password) has been sent on your email address."
+	OTPSendOnPhoneForReset    = "A security code has been sent on your phone number to reset password."
+	OTPSendOnEmailForReset    = "A security code has been sent on your email address to reset password."
 	OTPNotGenerated           = "Repeated failures user is advised to generate new OTP."
 	OTPInvalid                = "Invalid OTP."
+	UserNotFound              = "User not found."
 )

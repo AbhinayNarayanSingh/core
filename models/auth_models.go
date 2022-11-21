@@ -24,11 +24,15 @@ type User struct {
 }
 
 type OTP struct {
-	ID      primitive.ObjectID `bson:"_id,omitempty"`
-	User_Id primitive.ObjectID `bson:"user_id,omitempty"`
-	Email   *string            `bson:"email,omitempty"`
-	Phone   *string            `bson:"phone,omitempty"`
-	OTP     *string            `bson:"otp,omitempty"`
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	User_Id     primitive.ObjectID `bson:"user_id,omitempty"`
+	OTP_Id      primitive.ObjectID `bson:"otp_id,omitempty"`
+	Operation   int                `bson:"operation,omitempty"`
+	Email       *string            `bson:"email,omitempty"`
+	Phone       *string            `bson:"phone,omitempty"`
+	OTP         *string            `bson:"otp,omitempty"`
+	OldPassword *string            `bson:"old_password,omitempty" validate:"required"`
+	NewPassword *string            `bson:"new_password,omitempty" validate:"required"`
 }
 
 type PasswordUpdate struct {

@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="made dynamic varients on api payload & intruduce few new models"
+title="working on multiuse api but laptop crashed"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`
