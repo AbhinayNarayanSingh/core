@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="working on multiuse api but laptop crashed"
+title="worked on multiuse api handler"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`

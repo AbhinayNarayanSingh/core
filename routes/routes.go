@@ -12,12 +12,12 @@ func Path(router *gin.Engine) {
 	router.POST("/signup", controllers.SignUp())
 	router.POST("/signin", controllers.SignIn())
 
-	router.POST("/otp", controllers.OTPVerificationInitiator())
-	router.POST("/user/password/reset", controllers.OTPVerificationInitiator())
+	router.POST("/otp", controllers.OTPVerificationInitiator(0))
+	router.POST("/user/password/reset", controllers.OTPVerification(6))
 
-	router.POST("/otp/verify", controllers.OTPVerification())
+	router.POST("/otp/verify", controllers.OTPVerification(0))
 
-	router.POST("/user/password/reset/verify", controllers.ResetPassword())
+	router.POST("/user/password/reset/verify", controllers.OTPVerificationInitiator(6))
 
 	router.POST("/product", controllers.ProductGet())
 	router.POST("/address", controllers.SaveAddress())

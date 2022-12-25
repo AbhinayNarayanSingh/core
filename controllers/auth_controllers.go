@@ -66,6 +66,8 @@ func SignUp() gin.HandlerFunc {
 		false := false
 		user.IsActive = &false
 		user.IsAdmin = &false
+		user.IsEmailVerified = &false
+		user.IsPhoneVerified = &false
 
 		result, err := userCollection.InsertOne(ctx, user)
 
@@ -74,7 +76,7 @@ func SignUp() gin.HandlerFunc {
 			c.JSON(400, gin.H{"message": locals.InternalServerError})
 			return
 		}
-		c.JSON(200, gin.H{"message": result})
+		c.JSON(200, gin.H{"message": result, "payload": user})
 	}
 }
 
@@ -133,17 +135,18 @@ func SignIn() gin.HandlerFunc {
 	}
 }
 
-// 1.email verification		2.phone number verification		3.signup account activation with phone		4.mobile sign in
+// 1.email verification		2.phone number verification		3.signup account activation with phone	 	4.mobile sign in
 // 5.email password reset		6. phone password reset
 
-func OTPVerificationInitiator() gin.HandlerFunc {
+func OTPVerificationInitiator(action int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload models.OTP
-
 		var user models.User
-		var updateObject primitive.D
 
-		payload.Operation = 1
+		payload.Operation = 3
+		if action != 0 {
+			payload.Operation = action
+		}
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
@@ -154,17 +157,20 @@ func OTPVerificationInitiator() gin.HandlerFunc {
 		}
 
 		filter := bson.M{}
-		msg := locals.PhoneNotRegistered
+		errorMsg := ""
 		sucessMsg := locals.OTPSendOnPhone
 
+		// otp send on email or phone
 		switch payload.Operation {
 		case 1, 5:
 			filter = bson.M{"email": payload.Email}
-			msg = locals.EmailNotRegistered
+			errorMsg = locals.EmailNotRegistered
 		case 2, 3, 4, 6:
 			filter = bson.M{"phone": payload.Phone}
+			errorMsg = locals.PhoneNotRegistered
 		}
 
+		// response message for client
 		switch payload.Operation {
 		case 1:
 			sucessMsg = locals.OTPSendOnEmail
@@ -174,8 +180,9 @@ func OTPVerificationInitiator() gin.HandlerFunc {
 			sucessMsg = locals.OTPSendOnPhoneForReset
 		}
 
+		// looking for user
 		if err := userCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-			c.JSON(400, gin.H{"message": msg})
+			c.JSON(400, gin.H{"message": errorMsg})
 			return
 		}
 
@@ -188,55 +195,49 @@ func OTPVerificationInitiator() gin.HandlerFunc {
 
 		payload.OTP = &hashOTP
 
-		otp_id := primitive.NewObjectID()
-		payload.ID = otp_id
-		otp_id_string := otp_id.Hex()
-
-		updateObject = append(updateObject, bson.E{Key: "otp", Value: &hashOTP})
-		updateObject = append(updateObject, bson.E{Key: "operation", Value: payload.Operation})
-
-		if count, err := otpCollection.CountDocuments(ctx, filter); err != nil {
-			c.JSON(400, gin.H{"message": err.Error()})
-			return
-		} else if count > 0 {
-			upsert := true
-			update := bson.D{
-				{Key: "$set", Value: updateObject},
-			}
-			opts := options.UpdateOptions{
-				Upsert: &upsert,
-			}
-
-			if _, err := otpCollection.UpdateOne(ctx, filter, update, &opts); err != nil {
-				c.JSON(400, gin.H{"message": locals.InternalServerError, "details": err})
-				return
-			}
-
-			c.JSON(200, gin.H{"message": sucessMsg, "otp": generatedOTP, "otp_id": otp_id_string})
-			text := "Hello " + *user.FirstName + ", your security code is " + generatedOTP + ". never share your OTP with anyone else!"
-			go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
-			return
-		}
+		otp_uid := primitive.NewObjectID()
+		payload.ID = otp_uid
 
 		payload.User_Id = user.ID
+
+		otp_id_string := otp_uid.Hex()
+
+		if _, err := otpCollection.DeleteMany(ctx, filter); err != nil {
+			c.JSON(400, gin.H{"message": locals.InternalServerError, "details": err})
+			return
+		}
 
 		if _, err := otpCollection.InsertOne(ctx, payload); err != nil {
 			c.JSON(400, gin.H{"message": locals.InternalServerError})
 			return
 		}
+
 		c.JSON(200, gin.H{"message": sucessMsg, "otp": generatedOTP, "otp_id": otp_id_string})
+
+		if user.Telegram_ChatID != nil {
+			text := "Hello " + *user.FirstName + ", your security code is " + generatedOTP + ". never share your OTP with anyone else!"
+
+			go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
+		}
+		return
 	}
 }
 
-func OTPVerification() gin.HandlerFunc {
+func OTPVerification(action int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload models.OTP
 		payload.Operation = 3
+		if action != 0 {
+			payload.Operation = action
+		}
 
 		var user models.User
 
 		var otpObj models.OTP
 		var updateObject primitive.D
+
+		var collection *mongo.Collection
+		sucessMsg := ""
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
@@ -246,15 +247,12 @@ func OTPVerification() gin.HandlerFunc {
 			return
 		}
 
-		lookup := bson.M{"_id": payload.OTP_Id}
-
-		var DeleteOTPInstanceFn = func() {
-			_, err := otpCollection.DeleteOne(ctx, lookup)
-			if err != nil {
-				c.JSON(400, gin.H{"message": err})
-				return
-			}
+		id, err := primitive.ObjectIDFromHex(*payload.OTP_Id)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
 		}
+		lookup := bson.M{"_id": id}
 
 		if err := otpCollection.FindOne(ctx, lookup).Decode(&otpObj); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": locals.OTPNotGenerated})
@@ -262,7 +260,7 @@ func OTPVerification() gin.HandlerFunc {
 		}
 
 		if isOTPCorrect, _ := utils.VerifyPassword(*payload.OTP, *otpObj.OTP); !isOTPCorrect {
-			c.JSON(401, gin.H{"message": locals.OTPInvalid})
+			c.JSON(http.StatusBadRequest, gin.H{"message": locals.OTPInvalid})
 			return
 		}
 
@@ -271,28 +269,56 @@ func OTPVerification() gin.HandlerFunc {
 			return
 		}
 
-		var collection *mongo.Collection
+		filter := bson.M{"_id": otpObj.User_Id}
 
-		switch payload.Operation {
+		timestamp := utils.TimeStampFn()
+		updateObject = append(updateObject, bson.E{Key: "updated_at", Value: timestamp})
+
+		switch otpObj.Operation {
+		case 1:
+			updateObject = append(updateObject, bson.E{Key: "is_email_verified", Value: true})
+			sucessMsg = "We have sucessfully verified your email address"
+
+		case 2:
+			updateObject = append(updateObject, bson.E{Key: "is_phone_verified", Value: true})
+			sucessMsg = "We have sucessfully verified your phone number"
+
 		case 3:
-			collection = userCollection
-			upsert := true
-			filter := bson.M{"_id": otpObj.User_Id}
-			opt := options.UpdateOptions{
-				Upsert: &upsert,
-			}
 			updateObject = append(updateObject, bson.E{Key: "is_active", Value: true})
-			update := bson.D{
-				{Key: "$set", Value: updateObject},
-			}
+			updateObject = append(updateObject, bson.E{Key: "is_phone_verified", Value: true})
+			sucessMsg = locals.AccountActivated
 
+		case 5, 6:
+			pwd, _ := utils.HashPassword(*payload.NewPassword)
+			updateObject = append(updateObject, bson.E{Key: "password", Value: pwd})
+			sucessMsg = "Password has been sucessfully reset"
+		}
+
+		upsert := true
+		opt := options.UpdateOptions{
+			Upsert: &upsert,
+		}
+		update := bson.D{
+			{Key: "$set", Value: updateObject},
+		}
+		collection = userCollection
+
+		switch otpObj.Operation {
+		case 4:
+			c.JSON(200, gin.H{"message": "sorry api is under developent"})
+
+		case 1, 2, 3, 5:
 			if _, err := collection.UpdateOne(ctx, filter, update, &opt); err != nil {
-				c.JSON(400, gin.H{"message": err})
+				c.JSON(http.StatusBadRequest, gin.H{"message": err})
 				return
 			}
+			c.JSON(200, gin.H{"message": sucessMsg})
+		}
 
-			c.JSON(200, gin.H{"message": locals.AccountActivated})
-			go DeleteOTPInstanceFn()
+		go utils.SendTelegramMessage(*user.Telegram_ChatID, sucessMsg)
+		_, err = otpCollection.DeleteMany(ctx, lookup)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err})
 			return
 		}
 	}
@@ -301,7 +327,7 @@ func OTPVerification() gin.HandlerFunc {
 func UpdatePassword() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var foundUser models.User
-		var payload models.PasswordUpdate
+		var payload models.OTP
 
 		var updateObject primitive.D
 
@@ -354,71 +380,6 @@ func UpdatePassword() gin.HandlerFunc {
 		// here we update update_at
 		utils.UpdateTimeStampFn(userCollection, &foundUser.ID, "updated_at")
 
-		c.JSON(http.StatusOK, gin.H{"message": "password change sucessfull"})
-	}
-}
-
-func ResetPassword() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var payload models.PasswordUpdate
-
-		var foundResetPasswordInstance models.PasswordUpdate
-
-		var updateObject primitive.D
-
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		defer cancel()
-
-		// first bind payload to struct - email, new_password, otp
-		if err := c.BindJSON(&payload); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": locals.InternalServerError})
-		}
-
-		// here we search user instance in resetPasswordCollection
-		if err := resetPasswordCollection.FindOne(ctx, bson.M{"email": payload.Email}).Decode(&foundResetPasswordInstance); err != nil {
-			c.JSON(400, gin.H{"message": locals.OTPNotGenerated})
-			return
-		}
-		fmt.Println(1)
-		// here we verify otp
-		if isOTPCorrect, _ := utils.VerifyPassword(*payload.OTP, *foundResetPasswordInstance.OTP); !isOTPCorrect {
-			c.JSON(401, gin.H{"message": locals.OTPInvalid})
-			return
-		}
-
-		fmt.Println(2)
-		// here we update user new_password
-		pwd, _ := utils.HashPassword(*payload.NewPassword)
-		updateObject = append(updateObject, bson.E{Key: "password", Value: pwd})
-
-		upsert := true
-		filter := bson.M{"user_id": foundResetPasswordInstance.User_Id}
-		update := bson.D{
-			{Key: "$set", Value: updateObject},
-		}
-		opt := options.UpdateOptions{
-			Upsert: &upsert,
-		}
-
-		fmt.Println(3)
-		if _, err := userCollection.UpdateOne(ctx, filter, update, &opt); err != nil {
-			c.JSON(400, gin.H{"message": err})
-			return
-		}
-
-		fmt.Println(4)
-		// here we update update_at
-		utils.UpdateTimeStampFn(userCollection, &foundResetPasswordInstance.User_Id, "updated_at")
-
-		fmt.Println(5)
-		// here we're deleting otp instance from resetPasswordCollection
-		_, err := resetPasswordCollection.DeleteOne(ctx, filter)
-		if err != nil {
-			c.JSON(400, gin.H{"message": err})
-			return
-		}
-
-		fmt.Println(6)
 		c.JSON(http.StatusOK, gin.H{"message": "password change sucessfull"})
 	}
 }
