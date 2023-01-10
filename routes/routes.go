@@ -6,11 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// func WebsocketPath(router *gin.Engine) {
+// 	router.GET("/ws", controllers.ChatController())
+// }
+
 func Path(router *gin.Engine) {
 
 	router.GET("/", controllers.Welcome())
 	router.POST("/signup", controllers.SignUp())
 	router.POST("/signin", controllers.SignIn())
+	router.POST("/signin/otp", controllers.OTPVerification(4))
 
 	router.POST("/otp", controllers.OTPVerificationInitiator(0))
 	router.POST("/user/password/reset", controllers.OTPVerification(6))

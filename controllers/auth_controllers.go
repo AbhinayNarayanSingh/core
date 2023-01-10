@@ -237,7 +237,7 @@ func OTPVerification(action int) gin.HandlerFunc {
 		var updateObject primitive.D
 
 		var collection *mongo.Collection
-		sucessMsg := ""
+		var sucessMsg string
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
@@ -288,6 +288,9 @@ func OTPVerification(action int) gin.HandlerFunc {
 			updateObject = append(updateObject, bson.E{Key: "is_phone_verified", Value: true})
 			sucessMsg = locals.AccountActivated
 
+		case 4:
+			sucessMsg = "Hello " + *user.FirstName + ", We detected a login to your account"
+
 		case 5, 6:
 			pwd, _ := utils.HashPassword(*payload.NewPassword)
 			updateObject = append(updateObject, bson.E{Key: "password", Value: pwd})
@@ -305,7 +308,20 @@ func OTPVerification(action int) gin.HandlerFunc {
 
 		switch otpObj.Operation {
 		case 4:
-			c.JSON(200, gin.H{"message": "sorry api is under developent"})
+
+			if !*user.IsActive {
+				c.JSON(401, gin.H{"message": locals.AccountNotActivated})
+				return
+			}
+
+			userId := user.ID.Hex()
+
+			token, _ := utils.GenerateJWTToken(userId, *user.Email, *user.FirstName, *user.LastName, *user.Phone, *user.IsAdmin, *user.IsActive)
+			user.Token = &token
+
+			utils.UpdateTimeStampFn(userCollection, &user.ID, "last_login")
+
+			c.JSON(200, user)
 
 		case 1, 2, 3, 5:
 			if _, err := collection.UpdateOne(ctx, filter, update, &opt); err != nil {

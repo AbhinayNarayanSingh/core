@@ -33,6 +33,7 @@ type OTP struct {
 	Email       *string            `json:"email,omitempty" bson:"email,omitempty"`
 	Phone       *string            `json:"phone,omitempty" bson:"phone,omitempty"`
 	OTP         *string            `json:"otp,omitempty" bson:"otp,omitempty"`
+	Password    *string            `json:"password,omitempty" bson:"password,omitempty"`
 	OldPassword *string            `json:"old_password,omitempty" bson:"old_password,omitempty"`
 	NewPassword *string            `json:"new_password,omitempty" bson:"new_password,omitempty"`
 }
