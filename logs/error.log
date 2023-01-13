@@ -262,3 +262,4 @@ net/http.(*conn).serve(0xc00043a780, {0xdb6460, 0xc00009ba40})
 	/usr/local/go/src/net/http/server.go:1991 +0x607
 created by net/http.(*Server).Serve
 	/usr/local/go/src/net/http/server.go:3102 +0x4db
+2023/01/11 16:40:53 syntax error at byte offset 2

@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="worked on signin via otp functionality, completed"
+title="try to make chat server but failed"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`
