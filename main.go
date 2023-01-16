@@ -36,8 +36,10 @@ func main() {
 	router.Use(gin.Logger())
 
 	// Helper function to return a URL pattern
-	router.StaticFile("/", "static")
-	routes.WebsocketPath(router)
+
+	// router.StaticFile("/", "static")
+	// routes.WebsocketPath(router)
+
 	routes.Path(router)
 	routes.AdminSecurePath(router)
 	routes.SecurePath(router)

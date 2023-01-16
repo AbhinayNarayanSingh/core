@@ -55,7 +55,7 @@ func AuthenticateUser(c *gin.Context, userId string) (err error) {
 	return err
 }
 
-func GenerateJWTToken(ID string, Email string, FirstName string, LastName string, Phone string, IsAdmin bool, IsActive bool) (string, error) {
+func GenerateJWTToken(ID, Email, FirstName, LastName, Phone string, IsAdmin, IsActive bool) (string, error) {
 	claims := &JWTClaims{
 		Email:     Email,
 		ID:        ID,
@@ -85,17 +85,11 @@ func HashPassword(password string) (string, error) {
 	return string(hash), err
 }
 
-func VerifyPassword(userEnteredPassword string, password string) (bool, string) {
-	err := bcrypt.CompareHashAndPassword([]byte(password), []byte(userEnteredPassword))
-	isPasswordCorrect := true
-	msg := ""
-
-	if err != nil {
-		isPasswordCorrect = false
-		msg = "Incorrect password"
-		return isPasswordCorrect, msg
+func VerifyPassword(userEnteredPassword, password string) bool {
+	if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(userEnteredPassword)); err != nil {
+		return false
 	}
-	return isPasswordCorrect, msg
+	return true
 }
 
 func UpdateTimeStampFn(collection *mongo.Collection, user_id *primitive.ObjectID, update_feild string) {

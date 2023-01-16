@@ -3,7 +3,9 @@ package models
 import (
 	"time"
 
+	"github.com/AbhinayNarayanSingh/core/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type User struct {
@@ -25,7 +27,18 @@ type User struct {
 	Operation       int                `json:"operation,omitempty" bson:"operation,omitempty"`
 }
 
-type OTP struct {
+func (user User) PasswordVerify(userEnteredPassword string) bool {
+	return utils.VerifyPassword(userEnteredPassword, *user.Password)
+}
+
+func (user User) AccessToken(_id primitive.ObjectID, userCollection *mongo.Collection) string {
+	userId := _id.Hex()
+	token, _ := utils.GenerateJWTToken(userId, *user.Email, *user.FirstName, *user.LastName, *user.Phone, *user.IsAdmin, *user.IsActive)
+	utils.UpdateTimeStampFn(userCollection, &user.ID, "last_login")
+	return token
+}
+
+type OTP struct { // payload
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	User_Id     primitive.ObjectID `json:"user_id,omitempty" bson:"user_id,omitempty"`
 	OTP_Id      *string            `json:"otp_id,omitempty" bson:"otp_id,omitempty"`
@@ -36,4 +49,8 @@ type OTP struct {
 	Password    *string            `json:"password,omitempty" bson:"password,omitempty"`
 	OldPassword *string            `json:"old_password,omitempty" bson:"old_password,omitempty"`
 	NewPassword *string            `json:"new_password,omitempty" bson:"new_password,omitempty"`
+}
+
+func (otp OTP) OTPVerify(systemGeneratedOTP string) bool {
+	return utils.VerifyPassword(*otp.OTP, systemGeneratedOTP)
 }

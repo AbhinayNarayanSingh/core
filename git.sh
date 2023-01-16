@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="try to make chat server but failed"
+title="introduce methods"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`

@@ -110,7 +110,7 @@ func SignIn() gin.HandlerFunc {
 			return
 		}
 
-		if isPasswordCorrect, _ := utils.VerifyPassword(*payload.Password, *foundUser.Password); !isPasswordCorrect {
+		if isPasswordCorrect := utils.VerifyPassword(*payload.Password, *foundUser.Password); !isPasswordCorrect {
 			c.JSON(401, gin.H{"message": locals.InvalidPassword})
 			return
 		}
@@ -135,8 +135,9 @@ func SignIn() gin.HandlerFunc {
 	}
 }
 
-// 1.email verification		2.phone number verification		3.signup account activation with phone	 	4.mobile sign in
+// 1.email verification		2.phone number verification		3.signup account activation with phone
 // 5.email password reset		6. phone password reset
+// 7. sigin with email password				8.sigin with mobile password		4.mobile sign in
 
 func OTPVerificationInitiator(action int) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -252,6 +253,7 @@ func OTPVerification(action int) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
+
 		lookup := bson.M{"_id": id}
 
 		if err := otpCollection.FindOne(ctx, lookup).Decode(&otpObj); err != nil {
@@ -259,7 +261,7 @@ func OTPVerification(action int) gin.HandlerFunc {
 			return
 		}
 
-		if isOTPCorrect, _ := utils.VerifyPassword(*payload.OTP, *otpObj.OTP); !isOTPCorrect {
+		if isOTPCorrect := payload.OTPVerify(*otpObj.OTP); !isOTPCorrect {
 			c.JSON(http.StatusBadRequest, gin.H{"message": locals.OTPInvalid})
 			return
 		}
@@ -271,8 +273,7 @@ func OTPVerification(action int) gin.HandlerFunc {
 
 		filter := bson.M{"_id": otpObj.User_Id}
 
-		timestamp := utils.TimeStampFn()
-		updateObject = append(updateObject, bson.E{Key: "updated_at", Value: timestamp})
+		updateObject = append(updateObject, bson.E{Key: "updated_at", Value: utils.TimeStampFn()})
 
 		switch otpObj.Operation {
 		case 1:
@@ -314,12 +315,8 @@ func OTPVerification(action int) gin.HandlerFunc {
 				return
 			}
 
-			userId := user.ID.Hex()
-
-			token, _ := utils.GenerateJWTToken(userId, *user.Email, *user.FirstName, *user.LastName, *user.Phone, *user.IsAdmin, *user.IsActive)
+			token := user.AccessToken(user.ID, userCollection)
 			user.Token = &token
-
-			utils.UpdateTimeStampFn(userCollection, &user.ID, "last_login")
 
 			c.JSON(200, user)
 
@@ -365,7 +362,7 @@ func UpdatePassword() gin.HandlerFunc {
 		}
 
 		// here we verify password
-		if isPasswordCorrect, _ := utils.VerifyPassword(*payload.OldPassword, *foundUser.Password); !isPasswordCorrect {
+		if isPasswordCorrect := payload.OTPVerify(*foundUser.Password); !isPasswordCorrect {
 			c.JSON(401, gin.H{"message": locals.InvalidPassword})
 			return
 		}
