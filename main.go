@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/AbhinayNarayanSingh/core/routes"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,6 +34,7 @@ func main() {
 	}
 
 	router := gin.New()
+	router.Use(cors.Default())
 	router.Use(gin.Logger())
 
 	// Helper function to return a URL pattern

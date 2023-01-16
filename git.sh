@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="introduce methods"
+title="CORS enable"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`
