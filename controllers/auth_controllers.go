@@ -19,7 +19,7 @@ import (
 )
 
 var userCollection *mongo.Collection = config.OpenCollection(config.Client, "users")
-var otpCollection *mongo.Collection = config.OpenCollection(config.Client, "otp")
+var OtpCollection *mongo.Collection = config.OpenCollection(config.Client, "otp")
 var resetPasswordCollection *mongo.Collection = config.OpenCollection(config.Client, "reset_password")
 
 var validate = validator.New()
@@ -82,7 +82,9 @@ func SignUp() gin.HandlerFunc {
 
 func SignIn() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var payload models.User
+		var payload models.OTP
+
+		var foundOTP models.OTP
 		var foundUser models.User
 
 		payload.Operation = 1
@@ -96,13 +98,29 @@ func SignIn() gin.HandlerFunc {
 		}
 
 		filter := bson.M{}
-		msg := locals.EmailNotRegistered
+		var msg string
+
 		switch payload.Operation {
 		case 1:
 			filter = bson.M{"email": payload.Email}
+			msg = locals.EmailNotRegistered
+
 		case 2:
 			filter = bson.M{"phone": payload.Phone}
 			msg = locals.PhoneNotRegistered
+
+		case 4:
+			otp_id, _ := primitive.ObjectIDFromHex(*payload.OTP_Id)
+			lookup := bson.M{"_id": otp_id}
+			if err := OtpCollection.FindOne(ctx, lookup).Decode(&foundOTP); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err})
+				return
+			}
+			filter = bson.M{"_id": foundOTP.User_Id}
+
+		default:
+			c.JSON(http.StatusBadRequest, gin.H{"message": locals.BadRequest})
+			return
 		}
 
 		if err := userCollection.FindOne(ctx, filter).Decode(&foundUser); err != nil {
@@ -110,9 +128,17 @@ func SignIn() gin.HandlerFunc {
 			return
 		}
 
-		if isPasswordCorrect := utils.VerifyPassword(*payload.Password, *foundUser.Password); !isPasswordCorrect {
-			c.JSON(401, gin.H{"message": locals.InvalidPassword})
-			return
+		switch payload.Operation {
+		case 1, 2:
+			if isVerified := foundUser.PasswordVerify(*payload.Password); !isVerified {
+				c.JSON(401, gin.H{"message": locals.InvalidPassword})
+				return
+			}
+		case 4:
+			if isVerified := foundOTP.OTPVerify(*payload.OTP); !isVerified {
+				c.JSON(401, gin.H{"message": locals.InvalidPassword})
+				return
+			}
 		}
 
 		if !*foundUser.IsActive {
@@ -120,18 +146,18 @@ func SignIn() gin.HandlerFunc {
 			return
 		}
 
-		userId := foundUser.ID.Hex()
-
-		token, _ := utils.GenerateJWTToken(userId, *foundUser.Email, *foundUser.FirstName, *foundUser.LastName, *foundUser.Phone, *foundUser.IsAdmin, *foundUser.IsActive)
-
-		utils.UpdateTimeStampFn(userCollection, &foundUser.ID, "last_login")
-
+		token := foundUser.AccessToken(userCollection)
 		foundUser.Token = &token
 
+		stringempty := ""
+		foundUser.Password = &stringempty
+
 		c.JSON(200, foundUser)
-		// text := "Your OTP is " + "157379" + " for login on iCorn, never share your code with anyone."
 		text := "Hello " + *foundUser.FirstName + ", We detected a login to your account"
-		utils.SendTelegramMessage(*foundUser.Telegram_ChatID, text)
+		go utils.SendTelegramMessage(*foundUser.Telegram_ChatID, text)
+		if payload.Operation == 4 {
+			go foundOTP.RemoveOTP(OtpCollection)
+		}
 	}
 }
 
@@ -203,12 +229,12 @@ func OTPVerificationInitiator(action int) gin.HandlerFunc {
 
 		otp_id_string := otp_uid.Hex()
 
-		if _, err := otpCollection.DeleteMany(ctx, filter); err != nil {
+		if _, err := OtpCollection.DeleteMany(ctx, filter); err != nil {
 			c.JSON(400, gin.H{"message": locals.InternalServerError, "details": err})
 			return
 		}
 
-		if _, err := otpCollection.InsertOne(ctx, payload); err != nil {
+		if _, err := OtpCollection.InsertOne(ctx, payload); err != nil {
 			c.JSON(400, gin.H{"message": locals.InternalServerError})
 			return
 		}
@@ -256,12 +282,12 @@ func OTPVerification(action int) gin.HandlerFunc {
 
 		lookup := bson.M{"_id": id}
 
-		if err := otpCollection.FindOne(ctx, lookup).Decode(&otpObj); err != nil {
+		if err := OtpCollection.FindOne(ctx, lookup).Decode(&otpObj); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": locals.OTPNotGenerated})
 			return
 		}
 
-		if isOTPCorrect := payload.OTPVerify(*otpObj.OTP); !isOTPCorrect {
+		if isOTPCorrect := otpObj.OTPVerify(*payload.OTP); !isOTPCorrect {
 			c.JSON(http.StatusBadRequest, gin.H{"message": locals.OTPInvalid})
 			return
 		}
@@ -289,9 +315,6 @@ func OTPVerification(action int) gin.HandlerFunc {
 			updateObject = append(updateObject, bson.E{Key: "is_phone_verified", Value: true})
 			sucessMsg = locals.AccountActivated
 
-		case 4:
-			sucessMsg = "Hello " + *user.FirstName + ", We detected a login to your account"
-
 		case 5, 6:
 			pwd, _ := utils.HashPassword(*payload.NewPassword)
 			updateObject = append(updateObject, bson.E{Key: "password", Value: pwd})
@@ -309,16 +332,8 @@ func OTPVerification(action int) gin.HandlerFunc {
 
 		switch otpObj.Operation {
 		case 4:
-
-			if !*user.IsActive {
-				c.JSON(401, gin.H{"message": locals.AccountNotActivated})
-				return
-			}
-
-			token := user.AccessToken(user.ID, userCollection)
-			user.Token = &token
-
-			c.JSON(200, user)
+			c.JSON(http.StatusBadRequest, gin.H{"message": "StatusBadRequest"})
+			return
 
 		case 1, 2, 3, 5:
 			if _, err := collection.UpdateOne(ctx, filter, update, &opt); err != nil {
@@ -329,7 +344,7 @@ func OTPVerification(action int) gin.HandlerFunc {
 		}
 
 		go utils.SendTelegramMessage(*user.Telegram_ChatID, sucessMsg)
-		_, err = otpCollection.DeleteMany(ctx, lookup)
+		_, err = OtpCollection.DeleteMany(ctx, lookup)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err})
 			return

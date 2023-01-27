@@ -15,7 +15,7 @@ branch="master"
 
 prCommentResolverCommit=2
 
-title="CORS enable"
+title="now user can login via otp with same api"
 description=""
 developer="Abhinay Narayan Singh"
 currentdate=`date +%d-%b-%Y`

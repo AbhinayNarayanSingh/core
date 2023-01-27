@@ -12,7 +12,6 @@ func WebsocketPath(router *gin.Engine) {
 
 func Path(router *gin.Engine) {
 
-	// router.GET("/", controllers.Welcome())
 	router.POST("/signup", controllers.SignUp())
 	router.POST("/signin", controllers.SignIn())
 	router.POST("/signin/otp", controllers.OTPVerification(4))
