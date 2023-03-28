@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/AbhinayNarayanSingh/core/config"
 	"github.com/AbhinayNarayanSingh/core/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"gopkg.in/mgo.v2/bson"
 )
+
+var userCollection *mongo.Collection = config.OpenCollection(config.Client, "users")
+var otpCollection *mongo.Collection = config.OpenCollection(config.Client, "otp")
 
 type User struct {
 	ID              primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
@@ -34,7 +38,7 @@ func (user User) PasswordVerify(userEnteredPassword string) bool {
 	return utils.VerifyPassword(userEnteredPassword, *user.Password)
 }
 
-func (user User) AccessToken(userCollection *mongo.Collection) string {
+func (user User) AccessToken() string {
 	userId := user.ID.Hex()
 	token, _ := utils.GenerateJWTToken(userId, *user.Email, *user.FirstName, *user.LastName, *user.Phone, *user.IsAdmin, *user.IsActive)
 	utils.UpdateTimeStampFn(userCollection, &user.ID, "last_login")
@@ -58,11 +62,11 @@ func (otp OTP) OTPVerify(userEnteredOTP string) bool {
 	return utils.VerifyPassword(userEnteredOTP, *otp.OTP)
 }
 
-func (otp OTP) RemoveOTP(collection *mongo.Collection) {
+func (otp OTP) RemoveOTP() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	lookup := bson.M{"_id": otp.ID}
-	if _, err := collection.DeleteMany(ctx, lookup); err != nil {
+	if _, err := otpCollection.DeleteMany(ctx, lookup); err != nil {
 		fmt.Println(err)
 	}
 	return

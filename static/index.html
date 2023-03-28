@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <title>Go Websocket</title>
 
+</head>
+<body>
+    <button id="sendMessage">Send Message</button>
+
+</body>
     <script type="text/javascript">
 
         var ws = new WebSocket('ws://localhost:9090/ws');
@@ -24,10 +29,11 @@
         }
 
         window.ws = ws;
+
+        const sendMessage = () => {
+            ws.send({name: "Abhinay"})
+        }
+
+        document.querySelector("#sendMessage").addEventListener("click", () => sendMessage())
     </script>
-</head>
-<body>
-
-
-</body>
 </html>

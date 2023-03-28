@@ -10,8 +10,10 @@ import (
 	"github.com/AbhinayNarayanSingh/core/locals"
 	"github.com/AbhinayNarayanSingh/core/models"
 	"github.com/AbhinayNarayanSingh/core/utils"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -146,7 +148,7 @@ func SignIn() gin.HandlerFunc {
 			return
 		}
 
-		token := foundUser.AccessToken(userCollection)
+		token := foundUser.AccessToken()
 		foundUser.Token = &token
 
 		stringempty := ""
@@ -156,7 +158,7 @@ func SignIn() gin.HandlerFunc {
 		text := "Hello " + *foundUser.FirstName + ", We detected a login to your account"
 		go utils.SendTelegramMessage(*foundUser.Telegram_ChatID, text)
 		if payload.Operation == 4 {
-			go foundOTP.RemoveOTP(OtpCollection)
+			go foundOTP.RemoveOTP()
 		}
 	}
 }

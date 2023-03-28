@@ -64,6 +64,7 @@ func ProductCreate() gin.HandlerFunc {
 		}
 
 		c.JSON(200, gin.H{"message": "done"})
+		return
 	}
 }
 
@@ -98,6 +99,7 @@ func ProductDelete() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "Product Deleted"})
+		return
 	}
 }
 
@@ -138,7 +140,7 @@ func ProductUpdate() gin.HandlerFunc {
 			update := bson.D{{Key: "$set", Value: payload.Product_Images}}
 			UpdateProductFn(productImageCollection, &update)
 		}
-
+		return
 	}
 }
 
@@ -177,5 +179,6 @@ func ProductGet() gin.HandlerFunc {
 			filter := bson.M{"product_id": product_uid, "variant": payload.Variant_Color}
 			GetProductsFn(productImageCollection, &filter)
 		}
+		return
 	}
 }
