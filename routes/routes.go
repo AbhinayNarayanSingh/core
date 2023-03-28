@@ -7,7 +7,7 @@ import (
 )
 
 func WebsocketPath(router *gin.Engine) {
-	router.GET("/ws", controllers.ChatController())
+	// router.GET("/ws", controllers.ChatController())
 }
 
 func Path(router *gin.Engine) {
