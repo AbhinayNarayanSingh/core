@@ -1,8 +1,11 @@
 package locals
 
 const (
-	BadRequest                = "Bad Request."
-	InternalServerError       = "Ops! something has gone wrong on the website's server, engineers are notified."
+	BadRequest          = "Bad Request."
+	InternalServerError = "Ops! something has gone wrong on the website's server, engineers are notified."
+
+	AccountCreated = ", Congratulations! Your account has been successfully created."
+
 	InvalidPassword           = "Invalid password, remember that passwords are case-sensitive."
 	EmailNotRegistered        = "Email address isn't associated with this account."
 	EmailAssociateWithAccount = "Email is already associated with an account."

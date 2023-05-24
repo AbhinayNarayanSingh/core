@@ -14,7 +14,7 @@ func Path(router *gin.Engine) {
 
 	router.POST("/signup", controllers.SignUp())
 	router.POST("/signin", controllers.SignIn())
-	router.POST("/signin/otp", controllers.OTPVerification(4))
+	router.POST("/signup/verify", controllers.OTPVerification(4))
 
 	router.POST("/otp", controllers.OTPVerificationInitiator(0))
 	router.POST("/user/password/reset", controllers.OTPVerification(6))
@@ -23,8 +23,14 @@ func Path(router *gin.Engine) {
 
 	router.POST("/user/password/reset/verify", controllers.OTPVerificationInitiator(6))
 
-	router.POST("/product", controllers.ProductGet())
 	router.POST("/address", controllers.SaveAddress())
+
+	router.POST("/listing", controllers.CreateNewListing())
+
+	// categories
+	router.POST("/categories", controllers.CreateNewCategory())
+	router.GET("/categories", controllers.GetCategories())
+
 }
 
 func SecurePath(router *gin.Engine) {
@@ -39,7 +45,7 @@ func AdminSecurePath(router *gin.Engine) {
 
 	router.GET("/users", controllers.GetUsers())
 
-	router.POST("/products", controllers.ProductCreate())
-	router.PATCH("/products", controllers.ProductUpdate())
-	router.DELETE("/products", controllers.ProductDelete())
+	// router.POST("/products", controllers.ProductCreate())
+	// router.PATCH("/products", controllers.ProductUpdate())
+	// router.DELETE("/products", controllers.ProductDelete())
 }

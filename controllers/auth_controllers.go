@@ -75,10 +75,13 @@ func SignUp() gin.HandlerFunc {
 
 		if err != nil {
 			fmt.Println("User data not created")
-			c.JSON(400, gin.H{"message": locals.InternalServerError})
+			c.JSON(400, gin.H{"message": locals.InternalServerError, "err": err})
 			return
 		}
-		c.JSON(200, gin.H{"message": result, "payload": user})
+		c.JSON(http.StatusCreated, gin.H{"message": result.InsertedID})
+
+		text := "Hello " + *user.FirstName + locals.AccountCreated
+		go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
 	}
 }
 
@@ -163,9 +166,10 @@ func SignIn() gin.HandlerFunc {
 	}
 }
 
-// 1.email verification		2.phone number verification		3.signup account activation with phone
+// 1.email verification		2.phone number verification
+// 3.signup account activation with phone
 // 5.email password reset		6. phone password reset
-// 7. sigin with email password				8.sigin with mobile password		4.mobile sign in
+// 7. sigin with email password				8.sigin with mobile password		4.mobile sign in with OTP
 
 func OTPVerificationInitiator(action int) gin.HandlerFunc {
 	return func(c *gin.Context) {
