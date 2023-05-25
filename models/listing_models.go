@@ -29,7 +29,7 @@ type Listing struct {
 	Title                   string             `bson:"title"`
 	Description             string             `bson:"description"`
 	Listing_for             int                `bson:"listing_for"`
-	Amount                  int                `bson:"amount"`
+	Amount                  float32            `bson:"amount"`
 	Currency                string             `bson:"currency"`
 	Images                  *[]Image           `bson:"images"`
 	Posted_on               time.Time          `bson:"posted_on"`
