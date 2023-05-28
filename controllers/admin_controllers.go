@@ -15,7 +15,7 @@ import (
 func Welcome() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		c.JSON(200, gin.H{"message": "Hello programmer..."})
+		c.JSON(200, gin.H{"message": "Hello programmer... route yaad nhi hai"})
 	}
 }
 

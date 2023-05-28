@@ -27,6 +27,7 @@ func Path(router *gin.Engine) {
 	router.POST("/address", controllers.SaveAddress())
 
 	router.POST("/listing", controllers.CreateNewListing())
+	router.GET("/listings", controllers.GetListings())
 
 	// categories
 	router.POST("/categories", controllers.CreateNewCategory())

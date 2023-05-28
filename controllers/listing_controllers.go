@@ -100,3 +100,124 @@ func CreateNewListing() gin.HandlerFunc {
 		c.JSON(201, gin.H{"message": "done"})
 	}
 }
+
+func GetListings() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var results []bson.M
+
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		pipeline := mongo.Pipeline{
+			bson.D{{"$match", bson.D{{"isActiveAd", true}}}},
+			bson.D{
+				{"$facet",
+					bson.D{
+						{"featuredAdGroup",
+							bson.A{
+								bson.D{
+									{"$match",
+										bson.D{
+											{"isFeaturedAd", true},
+											{"isHighlightAd", false},
+										},
+									},
+								},
+								bson.D{
+									{"$group",
+										bson.D{
+											{"_id", "isFeaturedAd"},
+											{"count", bson.D{{"$sum", 1}}},
+											{"result", bson.D{{"$push", "$$ROOT"}}},
+										},
+									},
+								},
+							},
+						},
+						{"otherGroup",
+							bson.A{
+								bson.D{
+									{"$match",
+										bson.D{
+											{"isFeaturedAd", false},
+										},
+									},
+								},
+								bson.D{
+									{"$group",
+										bson.D{
+											{"_id", primitive.Null{}},
+											{"count", bson.D{{"$sum", 1}}},
+											{"result", bson.D{{"$push", "$$ROOT"}}},
+										},
+									},
+								},
+								bson.D{
+									{"$project",
+										bson.D{
+											{"_id", "normal"},
+											{"count", "$count"},
+											{"result",
+												bson.D{
+													{"$slice",
+														bson.A{
+															"$result",
+															(1 - 1) * 20,
+															20,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			bson.D{
+				{"$project",
+					bson.D{
+						{"allAds",
+							bson.D{
+								{"$concatArrays",
+									bson.A{
+										"$featuredAdGroup",
+										"$otherGroup",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			bson.D{{"$unwind", "$allAds"}},
+			bson.D{{"$replaceRoot", bson.D{{"newRoot", "$allAds"}}}},
+		}
+
+		cursor, err := listingCollection.Aggregate(ctx, pipeline)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Failed to retrieve categories", "error": err.Error()})
+			return
+		}
+
+		defer cursor.Close(ctx)
+
+		for cursor.Next(ctx) {
+			var result bson.M
+			if err := cursor.Decode(&result); err != nil {
+				log.Fatal(err)
+			}
+			results = append(results, result)
+		}
+
+		if err := cursor.Err(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Error occurred during category retrieval", "error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"results": results})
+
+	}
+}
