@@ -33,6 +33,8 @@ func Path(router *gin.Engine) {
 	router.POST("/categories", controllers.CreateNewCategory())
 	router.GET("/categories", controllers.GetCategories())
 
+	router.DELETE("/cloudinary/destroy", controllers.CloudinaryDestroy())
+
 }
 
 func SecurePath(router *gin.Engine) {

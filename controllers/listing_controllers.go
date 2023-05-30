@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/AbhinayNarayanSingh/core/config"
@@ -105,6 +106,12 @@ func GetListings() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var results []bson.M
 
+		p := c.DefaultQuery("page", "1")
+		l := c.DefaultQuery("limit", "20")
+
+		page, _ := strconv.Atoi(p)
+		limit, _ := strconv.Atoi(l)
+
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
@@ -136,13 +143,7 @@ func GetListings() gin.HandlerFunc {
 						},
 						{"otherGroup",
 							bson.A{
-								bson.D{
-									{"$match",
-										bson.D{
-											{"isFeaturedAd", false},
-										},
-									},
-								},
+								bson.D{{"$match", bson.D{{"isFeaturedAd", false}}}},
 								bson.D{
 									{"$group",
 										bson.D{
@@ -157,14 +158,12 @@ func GetListings() gin.HandlerFunc {
 										bson.D{
 											{"_id", "normal"},
 											{"count", "$count"},
+											{"page", bson.D{{"$toInt", page}}},
+											{"limit", bson.D{{"$toInt", limit}}},
 											{"result",
 												bson.D{
 													{"$slice",
-														bson.A{
-															"$result",
-															(1 - 1) * 20,
-															20,
-														},
+														bson.A{"$result", (page - 1) * limit, limit},
 													},
 												},
 											},
