@@ -2,7 +2,6 @@ package routes
 
 import (
 	"github.com/AbhinayNarayanSingh/core/controllers"
-	"github.com/AbhinayNarayanSingh/core/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,10 +37,14 @@ func Path(router *gin.Engine) {
 }
 
 func SecurePath(router *gin.Engine) {
-	router.Use(middleware.AuthenticationMiddleware())
+	// router.Use(middleware.AuthenticationMiddleware())
 
 	router.POST("/user/password", controllers.UpdatePassword())
 	router.GET("/users/:user_id", controllers.GetUserByID())
+
+	router.POST("/create-checkout-session", controllers.CreateCheckoutSession())
+	router.POST("/create-payment-intent", controllers.CreatePaymentIntent())
+	router.POST("/webhook", controllers.StripeWebhookListener())
 }
 
 func AdminSecurePath(router *gin.Engine) {
