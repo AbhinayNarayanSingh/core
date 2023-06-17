@@ -55,7 +55,7 @@ func AuthenticateUser(c *gin.Context, userId string) (err error) {
 	return err
 }
 
-func GenerateJWTToken(ID, Email, FirstName, LastName, Phone string, IsAdmin, IsActive bool) (string, error) {
+func GenerateJWTToken(ID, Email, FirstName, LastName, Phone string, IsAdmin, IsActive bool, days int) (string, error) {
 	claims := &JWTClaims{
 		Email:     Email,
 		ID:        ID,
@@ -65,7 +65,7 @@ func GenerateJWTToken(ID, Email, FirstName, LastName, Phone string, IsAdmin, IsA
 		IsAdmin:   IsAdmin,
 		IsActive:  IsActive,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(24)).Unix(),
+			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(24*days)).Unix(),
 		},
 	}
 
@@ -128,8 +128,10 @@ func ValidateToken(providedToken string) (*JWTClaims, error) {
 
 	claims, _ := token.Claims.(*JWTClaims)
 
+	// checks if the expiration time specified in the claim is earlier than the current local Unix timestamp. If it is, it indicates that the claim has expired.
+
 	if claims.ExpiresAt < time.Now().Local().Unix() {
-		return nil, nil
+		return nil, errors.New("Token has expired")
 	}
 	return claims, nil
 }

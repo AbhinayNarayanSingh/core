@@ -21,7 +21,7 @@ type User struct {
 	LastName              *string             `json:"lastname,omitempty" bson:"lastname,omitempty" validate:"required"`
 	Password              *string             `json:"password,omitempty" bson:"password,omitempty" validate:"required"`
 	Email                 *string             `json:"email,omitempty" bson:"email,omitempty" validate:"required"`
-	Phone                 *string             `json:"phone,omitempty" bson:"phone,omitempty" validate:"required"`
+	Phone                 *string             `json:"phone,omitempty" bson:"phone"`
 	IsActive              *bool               `json:"is_active,omitempty" bson:"is_active,omitempty"`
 	IsAdmin               *bool               `json:"is_admin,omitempty" bson:"is_admin,omitempty"`
 	IsPhoneVerified       *bool               `json:"is_phone_verified,omitempty" bson:"is_phone_verified,omitempty"`
@@ -30,6 +30,7 @@ type User struct {
 	Updated_at            time.Time           `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
 	Last_login            time.Time           `json:"last_login,omitempty" bson:"last_login,omitempty"`
 	Token                 *string             `json:"token,omitempty" bson:"token,omitempty"`
+	ReferenceToken        *string             `json:"reference_token,omitempty" bson:"reference_token,omitempty"`
 	Telegram_ChatID       *string             `json:"telegram_chat_id,omitempty" bson:"telegram_chat_id,omitempty"`
 	Operation             int                 `json:"operation,omitempty" bson:"operation,omitempty"`
 	IsProfessionalAccount *bool               `json:"is_professional_account,omitempty" bson:"is_professional_account,omitempty"`
@@ -49,11 +50,12 @@ func (user User) PasswordVerify(userEnteredPassword string) bool {
 	return utils.VerifyPassword(userEnteredPassword, *user.Password)
 }
 
-func (user User) AccessToken() string {
+func (user User) AccessToken() (string, string) {
 	userId := user.ID.Hex()
-	token, _ := utils.GenerateJWTToken(userId, *user.Email, *user.FirstName, *user.LastName, *user.Phone, *user.IsAdmin, *user.IsActive)
+	token, _ := utils.GenerateJWTToken(userId, *user.Email, *user.FirstName, *user.LastName, *user.Phone, *user.IsAdmin, *user.IsActive, 7)
+	referenceToken, _ := utils.GenerateJWTToken(userId, *user.Email, *user.FirstName, *user.LastName, *user.Phone, *user.IsAdmin, *user.IsActive, 180)
 	utils.UpdateTimeStampFn(userCollection, &user.ID, "last_login")
-	return token
+	return token, referenceToken
 }
 
 type OTP struct { // payload

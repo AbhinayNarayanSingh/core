@@ -33,7 +33,7 @@ func AuthenticationMiddleware() gin.HandlerFunc {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		filter := bson.M{"_id": claims.ID, "email": claims.Email, "phone": claims.Phone, "isactive": claims.IsAdmin, "isadmin": claims.IsAdmin}
+		filter := bson.M{"_id": claims.ID, "email": claims.Email, "isactive": claims.IsAdmin, "isadmin": claims.IsAdmin}
 
 		if count, error := userCollection.CountDocuments(ctx, filter); error != nil && count != 1 {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Authentication key invalid."})

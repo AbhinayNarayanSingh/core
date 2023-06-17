@@ -50,12 +50,14 @@ func SignUp() gin.HandlerFunc {
 			return
 		}
 
-		if count, err := userCollection.CountDocuments(ctx, bson.M{"phone": user.Phone}); err != nil {
-			c.JSON(400, gin.H{"message": err.Error()})
-			return
-		} else if count > 0 {
-			c.JSON(400, gin.H{"message": locals.PhoneAssociateWithAccount})
-			return
+		if user.Phone != nil && *user.Phone != "" {
+			if count, err := userCollection.CountDocuments(ctx, bson.M{"phone": user.Phone}); err != nil {
+				c.JSON(400, gin.H{"message": err.Error()})
+				return
+			} else if count > 0 {
+				c.JSON(400, gin.H{"message": locals.PhoneAssociateWithAccount})
+				return
+			}
 		}
 
 		user.ID = primitive.NewObjectID()
@@ -66,7 +68,9 @@ func SignUp() gin.HandlerFunc {
 		user.Created_at = utils.TimeStampFn()
 
 		false := false
-		user.IsActive = &false
+		if user.IsActive == nil {
+			user.IsActive = &false
+		}
 		user.IsAdmin = &false
 		user.IsEmailVerified = &false
 		user.IsPhoneVerified = &false
@@ -78,13 +82,16 @@ func SignUp() gin.HandlerFunc {
 			c.JSON(400, gin.H{"message": locals.InternalServerError, "err": err})
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{"message": result.InsertedID})
+		c.JSON(http.StatusCreated, gin.H{"message": "done", "_id": result.InsertedID})
 
 		text := "Hello " + *user.FirstName + locals.AccountCreated
 		go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
 	}
 }
 
+// operation 1	:	login with email & password (by default)
+// operation 2	:	login with phone number & password
+// operation 3	:	login with phone no. and OTP
 func SignIn() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload models.OTP
@@ -93,6 +100,7 @@ func SignIn() gin.HandlerFunc {
 		var foundUser models.User
 
 		payload.Operation = 1
+		stringempty := ""
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
@@ -151,10 +159,13 @@ func SignIn() gin.HandlerFunc {
 			return
 		}
 
-		token := foundUser.AccessToken()
+		if foundUser.Phone == nil {
+			foundUser.Phone = &stringempty
+		}
+		token, referenceToken := foundUser.AccessToken()
 		foundUser.Token = &token
+		foundUser.ReferenceToken = &referenceToken
 
-		stringempty := ""
 		foundUser.Password = &stringempty
 
 		c.JSON(200, foundUser)
@@ -415,5 +426,56 @@ func UpdatePassword() gin.HandlerFunc {
 		utils.UpdateTimeStampFn(userCollection, &foundUser.ID, "updated_at")
 
 		c.JSON(http.StatusOK, gin.H{"message": "password change sucessfull"})
+	}
+}
+
+func GetUserByToken() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var payload models.User
+		var user models.User
+		stringempty := ""
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		if err := c.BindJSON(&payload); err != nil {
+			c.JSON(400, gin.H{"message": locals.BadRequest})
+			return
+		}
+
+		if payload.ReferenceToken == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Authentication Token not found."})
+			return
+		}
+
+		claims, err := utils.ValidateToken(*payload.ReferenceToken)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Authentication Token has been expired."})
+			return
+		}
+		uid, _ := primitive.ObjectIDFromHex(claims.ID)
+
+		if err := userCollection.FindOne(ctx, bson.M{"_id": uid}).Decode(&user); err != nil {
+			c.JSON(500, gin.H{"message": "User not found.", "details": err.Error()})
+			return
+		}
+
+		if !*user.IsActive {
+			c.JSON(401, gin.H{"message": locals.AccountNotActivated})
+			return
+		}
+
+		if user.Phone == nil {
+			user.Phone = &stringempty
+		}
+		token, referenceToken := user.AccessToken()
+		user.Token = &token
+		user.ReferenceToken = &referenceToken
+
+		user.Password = &stringempty
+
+		c.JSON(200, user)
+		text := "Hello " + *user.FirstName + ", We detected a login to your account"
+		go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
 	}
 }

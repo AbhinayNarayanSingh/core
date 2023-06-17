@@ -1,0 +1,146 @@
+2023/06/17 18:01:10 http: panic serving [::1]:51442: runtime error: invalid memory address or nil pointer dereference
+goroutine 146 [running]:
+net/http.(*conn).serve.func1()
+	/usr/local/go/src/net/http/server.go:1854 +0xbf
+panic({0xbea500, 0x13285f0})
+	/usr/local/go/src/runtime/panic.go:890 +0x263
+github.com/AbhinayNarayanSingh/core/models.User.AccessToken({{0x64, 0x8d, 0xa3, 0xfc, 0xf0, 0x87, 0xc2, 0x1f, 0xee, 0x1c, ...}, ...})
+	/home/lenovo/Code/core/models/auth_models.go:54 +0x154
+github.com/AbhinayNarayanSingh/core/controllers.SignIn.func1(0x78f0a5?)
+	/home/lenovo/Code/core/controllers/auth_controllers.go:160 +0xaf8
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go:173
+github.com/gin-gonic/gin.LoggerWithConfig.func1(0xc0005ac700)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/logger.go:240 +0xe7
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go:173
+github.com/gin-gonic/gin.(*Engine).handleHTTPRequest(0xc000235860, 0xc0005ac700)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/gin.go:616 +0x66b
+github.com/gin-gonic/gin.(*Engine).ServeHTTP(0xc000235860, {0xe95e10?, 0xc0000e6000}, 0xc0005ac600)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/gin.go:572 +0x1dd
+net/http.serverHandler.ServeHTTP({0xe94388?}, {0xe95e10, 0xc0000e6000}, 0xc0005ac600)
+	/usr/local/go/src/net/http/server.go:2936 +0x316
+net/http.(*conn).serve(0xc000230cf0, {0xe96818, 0xc000436f00})
+	/usr/local/go/src/net/http/server.go:1995 +0x612
+created by net/http.(*Server).Serve
+	/usr/local/go/src/net/http/server.go:3089 +0x5ed
+2023/06/17 18:14:20 http: panic serving [::1]:52052: runtime error: invalid memory address or nil pointer dereference
+goroutine 80 [running]:
+net/http.(*conn).serve.func1()
+	/usr/local/go/src/net/http/server.go:1854 +0xbf
+panic({0xbea580, 0x13285f0})
+	/usr/local/go/src/runtime/panic.go:890 +0x263
+github.com/AbhinayNarayanSingh/core/controllers.SignUp.func1(0x78f0a5?)
+	/home/lenovo/Code/core/controllers/auth_controllers.go:53 +0x510
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go:173
+github.com/gin-gonic/gin.LoggerWithConfig.func1(0xc0001ae500)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/logger.go:240 +0xe7
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go:173
+github.com/gin-gonic/gin.(*Engine).handleHTTPRequest(0xc000234340, 0xc0001ae500)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/gin.go:616 +0x66b
+github.com/gin-gonic/gin.(*Engine).ServeHTTP(0xc000234340, {0xe95e70?, 0xc00024a0e0}, 0xc0001ae400)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/gin.go:572 +0x1dd
+net/http.serverHandler.ServeHTTP({0xe943e8?}, {0xe95e70, 0xc00024a0e0}, 0xc0001ae400)
+	/usr/local/go/src/net/http/server.go:2936 +0x316
+net/http.(*conn).serve(0xc000130360, {0xe96878, 0xc0003de9f0})
+	/usr/local/go/src/net/http/server.go:1995 +0x612
+created by net/http.(*Server).Serve
+	/usr/local/go/src/net/http/server.go:3089 +0x5ed
+2023/06/17 18:15:49 http: panic serving [::1]:51132: runtime error: invalid memory address or nil pointer dereference
+goroutine 58 [running]:
+net/http.(*conn).serve.func1()
+	/usr/local/go/src/net/http/server.go:1854 +0xbf
+panic({0xbea580, 0x13285f0})
+	/usr/local/go/src/runtime/panic.go:890 +0x263
+github.com/AbhinayNarayanSingh/core/controllers.SignUp.func1(0x78f0a5?)
+	/home/lenovo/Code/core/controllers/auth_controllers.go:53 +0x537
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go:173
+github.com/gin-gonic/gin.LoggerWithConfig.func1(0xc000672500)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/logger.go:240 +0xe7
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go:173
+github.com/gin-gonic/gin.(*Engine).handleHTTPRequest(0xc0001029c0, 0xc000672500)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/gin.go:616 +0x66b
+github.com/gin-gonic/gin.(*Engine).ServeHTTP(0xc0001029c0, {0xe95f50?, 0xc0001e60e0}, 0xc000672400)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/gin.go:572 +0x1dd
+net/http.serverHandler.ServeHTTP({0xe944c8?}, {0xe95f50, 0xc0001e60e0}, 0xc000672400)
+	/usr/local/go/src/net/http/server.go:2936 +0x316
+net/http.(*conn).serve(0xc0000d2a20, {0xe96958, 0xc0003c0e10})
+	/usr/local/go/src/net/http/server.go:1995 +0x612
+created by net/http.(*Server).Serve
+	/usr/local/go/src/net/http/server.go:3089 +0x5ed
+2023/06/17 23:11:54 http: panic serving [::1]:53884: runtime error: invalid memory address or nil pointer dereference
+goroutine 134 [running]:
+net/http.(*conn).serve.func1()
+	/usr/local/go/src/net/http/server.go:1854 +0xbf
+panic({0xbea580, 0x13285f0})
+	/usr/local/go/src/runtime/panic.go:890 +0x263
+github.com/AbhinayNarayanSingh/core/controllers.SignUp.func1(0x78f0a5?)
+	/home/lenovo/Code/core/controllers/auth_controllers.go:55 +0x5c5
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go:173
+github.com/gin-gonic/gin.LoggerWithConfig.func1(0xc0007ba600)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/logger.go:240 +0xe7
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go:173
+github.com/gin-gonic/gin.(*Engine).handleHTTPRequest(0xc0001031e0, 0xc0007ba600)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/gin.go:616 +0x66b
+github.com/gin-gonic/gin.(*Engine).ServeHTTP(0xc0001031e0, {0xe95ff0?, 0xc0001d60e0}, 0xc00061e600)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/gin.go:572 +0x1dd
+net/http.serverHandler.ServeHTTP({0xe94568?}, {0xe95ff0, 0xc0001d60e0}, 0xc00061e600)
+	/usr/local/go/src/net/http/server.go:2936 +0x316
+net/http.(*conn).serve(0xc0000d2c60, {0xe969f8, 0xc0003c4c90})
+	/usr/local/go/src/net/http/server.go:1995 +0x612
+created by net/http.(*Server).Serve
+	/usr/local/go/src/net/http/server.go:3089 +0x5ed
+2023/06/17 23:12:56 http: panic serving [::1]:32768: runtime error: invalid memory address or nil pointer dereference
+goroutine 128 [running]:
+net/http.(*conn).serve.func1()
+	/usr/local/go/src/net/http/server.go:1854 +0xbf
+panic({0xbea580, 0x13285f0})
+	/usr/local/go/src/runtime/panic.go:890 +0x263
+github.com/AbhinayNarayanSingh/core/controllers.SignUp.func1(0x78f0a5?)
+	/home/lenovo/Code/core/controllers/auth_controllers.go:58 +0x60f
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go:173
+github.com/gin-gonic/gin.LoggerWithConfig.func1(0xc0002e8800)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/logger.go:240 +0xe7
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go:173
+github.com/gin-gonic/gin.(*Engine).handleHTTPRequest(0xc0001feb60, 0xc0002e8800)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/gin.go:616 +0x66b
+github.com/gin-gonic/gin.(*Engine).ServeHTTP(0xc0001feb60, {0xe96050?, 0xc00063fb20}, 0xc0002e8700)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/gin.go:572 +0x1dd
+net/http.serverHandler.ServeHTTP({0xe945c8?}, {0xe96050, 0xc00063fb20}, 0xc0002e8700)
+	/usr/local/go/src/net/http/server.go:2936 +0x316
+net/http.(*conn).serve(0xc00016cab0, {0xe96a58, 0xc0001ef3e0})
+	/usr/local/go/src/net/http/server.go:1995 +0x612
+created by net/http.(*Server).Serve
+	/usr/local/go/src/net/http/server.go:3089 +0x5ed
+2023/06/18 00:09:21 http: panic serving [::1]:34430: runtime error: invalid memory address or nil pointer dereference
+goroutine 171 [running]:
+net/http.(*conn).serve.func1()
+	/usr/local/go/src/net/http/server.go:1854 +0xbf
+panic({0xbed6e0, 0x132d5f0})
+	/usr/local/go/src/runtime/panic.go:890 +0x263
+github.com/AbhinayNarayanSingh/core/controllers.GetUserByToken.func1(0x78f1a5?)
+	/home/lenovo/Code/core/controllers/auth_controllers.go:445 +0x1b8
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go:173
+github.com/gin-gonic/gin.LoggerWithConfig.func1(0xc00064e200)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/logger.go:240 +0xe7
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go:173
+github.com/gin-gonic/gin.(*Engine).handleHTTPRequest(0xc000202ea0, 0xc00064e200)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/gin.go:616 +0x66b
+github.com/gin-gonic/gin.(*Engine).ServeHTTP(0xc000202ea0, {0xe9a170?, 0xc00079a0e0}, 0xc00064e100)
+	/home/lenovo/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/gin.go:572 +0x1dd
+net/http.serverHandler.ServeHTTP({0xe986e8?}, {0xe9a170, 0xc00079a0e0}, 0xc00064e100)
+	/usr/local/go/src/net/http/server.go:2936 +0x316
+net/http.(*conn).serve(0xc00022e240, {0xe9ab78, 0xc000432cf0})
+	/usr/local/go/src/net/http/server.go:1995 +0x612
+created by net/http.(*Server).Serve
+	/usr/local/go/src/net/http/server.go:3089 +0x5ed
