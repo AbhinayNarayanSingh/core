@@ -450,13 +450,13 @@ func GetUserByToken() gin.HandlerFunc {
 
 		claims, err := utils.ValidateToken(*payload.ReferenceToken)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Authentication Token has been expired."})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid Authentication Token"})
 			return
 		}
 		uid, _ := primitive.ObjectIDFromHex(claims.ID)
 
 		if err := userCollection.FindOne(ctx, bson.M{"_id": uid}).Decode(&user); err != nil {
-			c.JSON(500, gin.H{"message": "User not found.", "details": err.Error()})
+			c.JSON(500, gin.H{"message": "Invalid Authentication Token", "details": err.Error()})
 			return
 		}
 

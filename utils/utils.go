@@ -25,6 +25,7 @@ type JWTClaims struct {
 	LastName  string
 	Email     string
 	Phone     string
+	Source    string
 	IsAdmin   bool
 	IsActive  bool
 	jwt.StandardClaims
@@ -64,6 +65,7 @@ func GenerateJWTToken(ID, Email, FirstName, LastName, Phone string, IsAdmin, IsA
 		Phone:     Phone,
 		IsAdmin:   IsAdmin,
 		IsActive:  IsActive,
+		Source:    "AdZone",
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(24*days)).Unix(),
 		},
@@ -128,6 +130,9 @@ func ValidateToken(providedToken string) (*JWTClaims, error) {
 
 	claims, _ := token.Claims.(*JWTClaims)
 
+	if claims.Source != "AdZone" {
+		return nil, err
+	}
 	// checks if the expiration time specified in the claim is earlier than the current local Unix timestamp. If it is, it indicates that the claim has expired.
 
 	if claims.ExpiresAt < time.Now().Local().Unix() {
