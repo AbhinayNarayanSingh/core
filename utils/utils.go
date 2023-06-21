@@ -20,14 +20,13 @@ import (
 var JWT_SECRET_KEY = os.Getenv("JWT_SECRET_KEY")
 
 type JWTClaims struct {
-	ID        string
-	FirstName string
-	LastName  string
-	Email     string
-	Phone     string
-	Source    string
-	IsAdmin   bool
-	IsActive  bool
+	ID       string
+	Name     string
+	Email    string
+	Phone    string
+	Source   string
+	IsAdmin  bool
+	IsActive bool
 	jwt.StandardClaims
 }
 
@@ -56,16 +55,15 @@ func AuthenticateUser(c *gin.Context, userId string) (err error) {
 	return err
 }
 
-func GenerateJWTToken(ID, Email, FirstName, LastName, Phone string, IsAdmin, IsActive bool, days int) (string, error) {
+func GenerateJWTToken(ID, Email, Name, Phone string, IsAdmin, IsActive bool, days int) (string, error) {
 	claims := &JWTClaims{
-		Email:     Email,
-		ID:        ID,
-		FirstName: FirstName,
-		LastName:  LastName,
-		Phone:     Phone,
-		IsAdmin:   IsAdmin,
-		IsActive:  IsActive,
-		Source:    "AdZone",
+		Email:    Email,
+		ID:       ID,
+		Name:     Name,
+		Phone:    Phone,
+		IsAdmin:  IsAdmin,
+		IsActive: IsActive,
+		Source:   "AdZone",
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(24*days)).Unix(),
 		},

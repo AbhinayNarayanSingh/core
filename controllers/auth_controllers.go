@@ -84,7 +84,7 @@ func SignUp() gin.HandlerFunc {
 		}
 		c.JSON(http.StatusCreated, gin.H{"message": "done", "_id": result.InsertedID})
 
-		text := "Hello " + *user.FirstName + locals.AccountCreated
+		text := "Hello " + *user.Name + locals.AccountCreated
 		go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
 	}
 }
@@ -169,7 +169,7 @@ func SignIn() gin.HandlerFunc {
 		foundUser.Password = &stringempty
 
 		c.JSON(200, foundUser)
-		text := "Hello " + *foundUser.FirstName + ", We detected a login to your account"
+		text := "Hello " + *foundUser.Name + ", We detected a login to your account"
 		go utils.SendTelegramMessage(*foundUser.Telegram_ChatID, text)
 		if payload.Operation == 4 {
 			go foundOTP.RemoveOTP()
@@ -259,7 +259,7 @@ func OTPVerificationInitiator(action int) gin.HandlerFunc {
 		c.JSON(200, gin.H{"message": sucessMsg, "otp": generatedOTP, "otp_id": otp_id_string})
 
 		if user.Telegram_ChatID != nil {
-			text := "Hello " + *user.FirstName + ", your security code is " + generatedOTP + ". never share your OTP with anyone else!"
+			text := "Hello " + *user.Name + ", your security code is " + generatedOTP + ". never share your OTP with anyone else!"
 
 			go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
 		}
@@ -475,7 +475,7 @@ func GetUserByToken() gin.HandlerFunc {
 		user.Password = &stringempty
 
 		c.JSON(200, user)
-		text := "Hello " + *user.FirstName + ", We detected a login to your account"
+		text := "Hello " + *user.Name + ", We detected a login to your account"
 		go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
 	}
 }

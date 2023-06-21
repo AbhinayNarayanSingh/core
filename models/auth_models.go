@@ -17,8 +17,7 @@ var otpCollection *mongo.Collection = config.OpenCollection(config.Client, "otp"
 
 type User struct {
 	ID                    primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
-	FirstName             *string             `json:"firstname,omitempty" bson:"firstname,omitempty" validate:"required"`
-	LastName              *string             `json:"lastname,omitempty" bson:"lastname,omitempty" validate:"required"`
+	Name                  *string             `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
 	Password              *string             `json:"password,omitempty" bson:"password,omitempty" validate:"required"`
 	Email                 *string             `json:"email,omitempty" bson:"email,omitempty" validate:"required"`
 	Phone                 *string             `json:"phone,omitempty" bson:"phone"`
@@ -52,8 +51,8 @@ func (user User) PasswordVerify(userEnteredPassword string) bool {
 
 func (user User) AccessToken() (string, string) {
 	userId := user.ID.Hex()
-	token, _ := utils.GenerateJWTToken(userId, *user.Email, *user.FirstName, *user.LastName, *user.Phone, *user.IsAdmin, *user.IsActive, 7)
-	referenceToken, _ := utils.GenerateJWTToken(userId, *user.Email, *user.FirstName, *user.LastName, *user.Phone, *user.IsAdmin, *user.IsActive, 180)
+	token, _ := utils.GenerateJWTToken(userId, *user.Email, *user.Name, *user.Phone, *user.IsAdmin, *user.IsActive, 7)
+	referenceToken, _ := utils.GenerateJWTToken(userId, *user.Email, *user.Name, *user.Phone, *user.IsAdmin, *user.IsActive, 180)
 	utils.UpdateTimeStampFn(userCollection, &user.ID, "last_login")
 	return token, referenceToken
 }

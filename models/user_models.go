@@ -9,8 +9,7 @@ import (
 type Address struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
 	User_ID     primitive.ObjectID `bson:"user_id,omitempty"`
-	FirstName   *string            `bson:"firstname,omitempty"`
-	LastName    *string            `bson:"lastname,omitempty"`
+	Name        *string            `bson:"name,omitempty"`
 	Address     *string            `bson:"address,omitempty"`
 	City        *string            `bson:"city,omitempty"`
 	State       *string            `bson:"state,omitempty"`
