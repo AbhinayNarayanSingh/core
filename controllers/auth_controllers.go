@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -29,6 +28,8 @@ var validate = validator.New()
 func SignUp() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var user models.User
+		var stringempty = ""
+
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
@@ -77,15 +78,26 @@ func SignUp() gin.HandlerFunc {
 
 		result, err := userCollection.InsertOne(ctx, user)
 
+		if user.Phone == nil {
+			user.Phone = &stringempty
+		}
+		token, referenceToken := user.AccessToken()
+		user.Token = &token
+		user.ReferenceToken = &referenceToken
+
+		user.Password = &stringempty
+
 		if err != nil {
-			fmt.Println("User data not created")
 			c.JSON(400, gin.H{"message": locals.InternalServerError, "err": err})
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{"message": "done", "_id": result.InsertedID})
 
-		text := "Hello " + *user.Name + locals.AccountCreated
-		go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
+		c.JSON(http.StatusCreated, gin.H{"message": "done", "_id": result.InsertedID, "user": user})
+
+		if user.Telegram_ChatID != nil {
+			text := "Hello " + *user.Name + locals.AccountCreated
+			go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
+		}
 	}
 }
 
@@ -263,7 +275,6 @@ func OTPVerificationInitiator(action int) gin.HandlerFunc {
 
 			go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
 		}
-		return
 	}
 }
 
@@ -360,12 +371,15 @@ func OTPVerification(action int) gin.HandlerFunc {
 			c.JSON(200, gin.H{"message": sucessMsg})
 		}
 
-		go utils.SendTelegramMessage(*user.Telegram_ChatID, sucessMsg)
+		if user.Telegram_ChatID != nil {
+			go utils.SendTelegramMessage(*user.Telegram_ChatID, sucessMsg)
+		}
 		_, err = OtpCollection.DeleteMany(ctx, lookup)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err})
 			return
 		}
+
 	}
 }
 
@@ -475,7 +489,10 @@ func GetUserByToken() gin.HandlerFunc {
 		user.Password = &stringempty
 
 		c.JSON(200, user)
-		text := "Hello " + *user.Name + ", We detected a login to your account"
-		go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
+
+		if user.Telegram_ChatID != nil {
+			text := "Hello " + *user.Name + ", We detected a login to your account"
+			go utils.SendTelegramMessage(*user.Telegram_ChatID, text)
+		}
 	}
 }
