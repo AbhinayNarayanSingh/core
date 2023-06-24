@@ -20,4 +20,5 @@ const (
 	OTPNotGenerated           = "Repeated failures user is advised to generate new OTP."
 	OTPInvalid                = "Invalid OTP."
 	UserNotFound              = "User not found."
+	SessionExpired            = "Session Expired: Please log in again. We apologize for the inconvenience."
 )

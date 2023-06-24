@@ -458,19 +458,19 @@ func GetUserByToken() gin.HandlerFunc {
 		}
 
 		if payload.ReferenceToken == nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Authentication Token not found."})
+			c.JSON(http.StatusBadRequest, gin.H{"message": locals.SessionExpired, "reason": "Authentication Token not found."})
 			return
 		}
 
 		claims, err := utils.ValidateToken(*payload.ReferenceToken)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid Authentication Token"})
+			c.JSON(http.StatusBadRequest, gin.H{"message": locals.SessionExpired, "reason": "Invalid Authentication Token"})
 			return
 		}
 		uid, _ := primitive.ObjectIDFromHex(claims.ID)
 
 		if err := userCollection.FindOne(ctx, bson.M{"_id": uid}).Decode(&user); err != nil {
-			c.JSON(500, gin.H{"message": "Invalid Authentication Token", "details": err.Error()})
+			c.JSON(500, gin.H{"message": locals.SessionExpired, "details": err.Error()})
 			return
 		}
 
