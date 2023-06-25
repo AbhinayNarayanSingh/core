@@ -192,7 +192,6 @@ func SignIn() gin.HandlerFunc {
 // 1.email verification		2.phone number verification
 // 3.signup account activation with phone
 // 5.email password reset		6. phone password reset
-// 7. sigin with email password				8.sigin with mobile password		4.mobile sign in with OTP
 
 func OTPVerificationInitiator(action int) gin.HandlerFunc {
 	return func(c *gin.Context) {

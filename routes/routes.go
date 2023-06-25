@@ -12,17 +12,20 @@ func WebsocketPath(router *gin.Engine) {
 func Path(router *gin.Engine) {
 
 	router.GET("/", controllers.Welcome())
+
+	router.POST("/otp", controllers.OTPVerificationInitiator(0)) // one route to generate otp for all pourpose
+
+	// user signup routes
 	router.POST("/signup", controllers.SignUp())
-	router.POST("/signin", controllers.SignIn())
-	router.POST("/refresh-token", controllers.GetUserByToken())
 	router.POST("/signup/verify", controllers.OTPVerification(4))
 
-	router.POST("/otp", controllers.OTPVerificationInitiator(0))
-	router.POST("/user/password/reset", controllers.OTPVerification(6))
+	// user authentication routes
+	router.POST("/signin", controllers.SignIn())
+	router.POST("/refresh-token", controllers.GetUserByToken())
 
-	router.POST("/otp/verify", controllers.OTPVerification(0))
-
-	router.POST("/user/password/reset/verify", controllers.OTPVerificationInitiator(6))
+	// password reset routes
+	router.POST("/password-reset", controllers.OTPVerification(5)) // 5.email password reset		6. phone password reset
+	router.POST("/user/verify", controllers.OTPVerification(1))    // 1.email verification		2.phone number verification
 
 	router.POST("/address", controllers.SaveAddress())
 
