@@ -181,8 +181,12 @@ func SignIn() gin.HandlerFunc {
 		foundUser.Password = &stringempty
 
 		c.JSON(200, foundUser)
-		text := "Hello " + *foundUser.Name + ", We detected a login to your account"
-		go utils.SendTelegramMessage(*foundUser.Telegram_ChatID, text)
+
+		if foundUser.Telegram_ChatID != nil {
+			text := "Hello " + *foundUser.Name + ", We detected a login to your account"
+			go utils.SendTelegramMessage(*foundUser.Telegram_ChatID, text)
+		}
+
 		if payload.Operation == 4 {
 			go foundOTP.RemoveOTP()
 		}
