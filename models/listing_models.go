@@ -28,7 +28,7 @@ type Listing struct {
 	Category                string             `bson:"category,omitempty"`
 	Title                   string             `bson:"title"`
 	Description             string             `bson:"description"`
-	Listing_for             int                `bson:"listing_for"`
+	Listing_for             string             `bson:"listing_for"`
 	Amount                  float32            `bson:"amount"`
 	Currency                string             `bson:"currency"`
 	Images                  *[]Image           `bson:"images"`
@@ -37,6 +37,7 @@ type Listing struct {
 	IsActiveAd              bool               `bson:"isActiveAd"`
 	IsFeaturedAd            bool               `bson:"isFeaturedAd"`
 	IsHighlightAd           bool               `bson:"isHighlightAd"`
+	IsBumpAd                bool               `bson:"isBumpAd"`
 	IsWebsiteLinkedAd       bool               `bson:"isWebsiteLinkedAd"`
 	Tags                    *[]string          `bson:"tags"`
 	WebsiteURL              string             `bson:"websiteURL"`
