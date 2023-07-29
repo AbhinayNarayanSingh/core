@@ -89,9 +89,16 @@ func CreateNewListing() gin.HandlerFunc {
 		object_id := primitive.NewObjectID()
 		timestamp := utils.TimeStampFn()
 
+		payload.IsActiveAd = false
+
 		payload.ID = object_id
 		payload.Posted_on = timestamp
 		payload.Updated_on = timestamp
+
+		payload.AdExpiry = timestamp
+		payload.FeaturedExp = timestamp
+		payload.HighlightExp = timestamp
+		payload.BumpExp = timestamp
 
 		if _, err := listingCollection.InsertOne(ctx, payload); err != nil {
 			c.JSON(400, gin.H{"message": locals.InternalServerError, "details": err})

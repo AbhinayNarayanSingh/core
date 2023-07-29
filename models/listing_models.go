@@ -32,8 +32,6 @@ type Listing struct {
 	Amount                  float32            `bson:"amount"`
 	Currency                string             `bson:"currency"`
 	Images                  *[]Image           `bson:"images"`
-	Posted_on               time.Time          `bson:"posted_on"`
-	Updated_on              time.Time          `bson:"updated_on"`
 	IsActiveAd              bool               `bson:"isActiveAd"`
 	IsFeaturedAd            bool               `bson:"isFeaturedAd"`
 	IsHighlightAd           bool               `bson:"isHighlightAd"`
@@ -51,6 +49,12 @@ type Listing struct {
 	Country_code            string             `bson:"country_code"`
 	Phone                   string             `bson:"phone"`
 	Email                   string             `bson:"email"`
+	Posted_on               time.Time          `bson:"posted_on"`
+	Updated_on              time.Time          `bson:"updated_on"`
+	AdExpiry                time.Time          `bson:"ad_expiry"`
+	FeaturedExp             time.Time          `bson:"featured_exp"`
+	HighlightExp            time.Time          `bson:"highlight_exp"`
+	BumpExp                 time.Time          `bson:"bump_exp"`
 }
 
 type Image struct {
