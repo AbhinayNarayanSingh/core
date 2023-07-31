@@ -47,8 +47,10 @@ func SecurePath(router *gin.Engine) {
 	router.GET("/users/:user_id", controllers.GetUserByID())
 
 	router.POST("/create-checkout-session", controllers.CreateCheckoutSession())
-	router.POST("/create-payment-intent", controllers.CreatePaymentIntent())
 	router.POST("/webhook", controllers.StripeWebhookListener())
+	router.POST("/create-payment-intent", controllers.CreatePaymentIntent())
+	router.POST("/cancel-payment-intent", controllers.CancelPaymentIntent())
+	router.POST("/status-payment-intent", controllers.StatusPaymentIntent())
 }
 
 func AdminSecurePath(router *gin.Engine) {

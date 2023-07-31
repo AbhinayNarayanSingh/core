@@ -1,10 +1,15 @@
 package controllers
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/AbhinayNarayanSingh/core/config"
+	"github.com/AbhinayNarayanSingh/core/locals"
+	"github.com/AbhinayNarayanSingh/core/models"
 	"github.com/gin-gonic/gin"
 	"github.com/stripe/stripe-go/v74"
 	"github.com/stripe/stripe-go/v74/checkout/session"
@@ -12,39 +17,89 @@ import (
 	"github.com/stripe/stripe-go/v74/price"
 	"github.com/stripe/stripe-go/v74/product"
 	"github.com/stripe/stripe-go/v74/webhook"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+var transactionsCollection *mongo.Collection = config.OpenCollection(config.Client, "transactions")
+
+var stringempty string = ""
 
 func CreatePaymentIntent() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var payload models.Stripe
 		stripe.Key = os.Getenv("STRIP_KEY")
 
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": locals.BadRequest, "details": err.Error()})
+			return
+		}
+
+		// for i := 0; i < len(payload.Services); i++ {
+		// 	fmt.Println(*payload.Services[i].Service)
+		// }
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
 		params := &stripe.PaymentIntentParams{
-			Amount:   stripe.Int64(100050),
-			Currency: stripe.String(string(stripe.CurrencyINR)),
+			Amount:   stripe.Int64(int64(*payload.Amount)),
+			Currency: stripe.String(string(stripe.CurrencyCAD)),
 			AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
 				Enabled: stripe.Bool(true),
 			},
 		}
 		pi, err := paymentintent.New(params)
-		// pi, err := paymentintent.Get("payment_intent_id", nil)
 
 		if err != nil {
-			// Try to safely cast a generic error to a stripe.Error so that we can get at
-			// some additional Stripe-specific information about what went wrong.
 			if stripeErr, ok := err.(*stripe.Error); ok {
-				c.JSON(400, stripeErr.Error())
+				c.JSON(500, stripeErr.Error())
 			} else {
 				c.JSON(500, err.Error())
 			}
 			return
 		}
 
-		c.JSON(http.StatusSeeOther, struct {
-			ClientSecret string `json:"clientSecret"`
-		}{
-			ClientSecret: pi.ClientSecret,
-		})
+		payload.ID = primitive.NewObjectID()
+		payload.Against, _ = primitive.ObjectIDFromHex(*payload.Listing_ID)
+		payload.User_ID, _ = primitive.ObjectIDFromHex(*payload.Seller_ID)
 
+		payload.ClientSecret = pi.ClientSecret
+		payload.PaymentIntent_ID = pi.ID
+		payload.Status = string(pi.Status)
+
+		if _, err := transactionsCollection.InsertOne(ctx, payload); err != nil {
+			c.JSON(400, gin.H{"message": locals.InternalServerError, "details": err})
+			return
+		}
+
+		c.JSON(http.StatusOK, payload)
+	}
+}
+
+func CancelPaymentIntent() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		stripe.Key = os.Getenv("STRIP_KEY")
+		paymentIntentID := "pi_3NZvLaSAIDSoJ9VZ0CvysG9F"
+		pi, err := paymentintent.Cancel(paymentIntentID, nil)
+		if err != nil {
+			c.JSON(500, err.Error())
+			return
+		}
+		c.JSON(http.StatusOK, pi.Status)
+	}
+}
+
+func StatusPaymentIntent() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		stripe.Key = os.Getenv("STRIP_KEY")
+		paymentIntentID := "pi_3NFDkXSAIDSoJ9VZ1lTrKlG8"
+		pi, err := paymentintent.Get(paymentIntentID, nil)
+		if err != nil {
+			c.JSON(500, err.Error())
+			return
+		}
+		c.JSON(http.StatusOK, pi.Status)
 	}
 }
 
