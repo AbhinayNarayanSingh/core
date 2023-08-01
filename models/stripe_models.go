@@ -3,10 +3,9 @@ package models
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type PayloadServices struct {
-	Service       *string  `json:"service" bson:"service"`
-	Vadility      *int     `json:"vadility" bson:"vadility"`
-	UnitOfMeasure *string  `json:"unitOfMeasure" bson:"unitOfMeasure"`
-	BasePrice     *float32 `json:"basePrice" bson:"basePrice"`
+	ID       string  `json:"_id" bson:"_id"`
+	Duration int     `json:"duration" bson:"duration"`
+	Name     *string `json:"name,omitempty" bson:"name,omitempty"`
 }
 
 type Stripe struct {
@@ -18,7 +17,6 @@ type Stripe struct {
 	Seller_ID        *string            `json:"seller_id,omitempty" bson:"seller_id,omitempty"`
 	Type             *string            `json:"type" bson:"type"`
 	Narration        *string            `json:"narration,omitempty" bson:"narration,omitempty"`
-	Amount           *float32           `json:"amount" bson:"amount"`
 	ClientSecret     string             `json:"clientSecret,omitempty" bson:"clientSecret,omitempty"`
 	PaymentIntent_ID string             `json:"paymentIntent_id,omitempty" bson:"paymentIntent_id,omitempty"`
 	Status           string             `json:"status,omitempty" bson:"status,omitempty"`

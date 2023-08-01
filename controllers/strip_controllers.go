@@ -17,13 +17,36 @@ import (
 	"github.com/stripe/stripe-go/v74/price"
 	"github.com/stripe/stripe-go/v74/product"
 	"github.com/stripe/stripe-go/v74/webhook"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var transactionsCollection *mongo.Collection = config.OpenCollection(config.Client, "transactions")
+var ServicesCollection *mongo.Collection = config.OpenCollection(config.Client, "services")
 
 var stringempty string = ""
+
+func findAllServices(serviceIDs []primitive.ObjectID) ([]models.Services, error) {
+	var services []models.Services
+	filter := bson.M{"_id": bson.M{"$in": serviceIDs}}
+	cur, err := ServicesCollection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(context.TODO())
+
+	for cur.Next(context.TODO()) {
+		var service models.Services
+		err := cur.Decode(&service)
+		if err != nil {
+			return nil, err
+		}
+		services = append(services, service)
+	}
+
+	return services, nil
+}
 
 func CreatePaymentIntent() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -35,15 +58,45 @@ func CreatePaymentIntent() gin.HandlerFunc {
 			return
 		}
 
-		// for i := 0; i < len(payload.Services); i++ {
-		// 	fmt.Println(*payload.Services[i].Service)
-		// }
-
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
+		serviceIDs := make([]primitive.ObjectID, len(payload.Services))
+		for i, item := range payload.Services {
+			serviceID, err := primitive.ObjectIDFromHex(item.ID)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid service ID"})
+				return
+			}
+			serviceIDs[i] = serviceID
+		}
+
+		services, err := findAllServices(serviceIDs)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch services"})
+			return
+		}
+
+		// map to associate service IDs with their details
+		serviceMap := make(map[string]models.Services)
+		for _, service := range services {
+			serviceMap[service.ID.Hex()] = service
+		}
+
+		totalCost := float32(0)
+
+		for _, item := range payload.Services {
+			service, found := serviceMap[item.ID]
+			if !found {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Service not found"})
+				return
+			}
+			cost := service.BasePrice * float32(item.Duration)
+			totalCost += cost
+		}
+
 		params := &stripe.PaymentIntentParams{
-			Amount:   stripe.Int64(int64(*payload.Amount)),
+			Amount:   stripe.Int64(int64(totalCost * 100)),
 			Currency: stripe.String(string(stripe.CurrencyCAD)),
 			AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
 				Enabled: stripe.Bool(true),
@@ -73,7 +126,7 @@ func CreatePaymentIntent() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, payload)
+		c.JSON(http.StatusOK, gin.H{"_id": payload.ID, "clientSecret": payload.ClientSecret, "paymentIntentID": payload.PaymentIntent_ID, "totalCost": totalCost})
 	}
 }
 
