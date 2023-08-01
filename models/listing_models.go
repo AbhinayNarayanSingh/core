@@ -7,16 +7,26 @@ import (
 )
 
 type Category struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	Name        *string            `bson:"name,omitempty"`
-	Icon        *string            `bson:"icon,omitempty"`
-	SubCategory *[]SubCategory     `bson:"sub_category"`
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	Name        *string            `bson:"name,omitempty" json:"name,omitempty"`
+	Icon        *string            `bson:"icon,omitempty" json:"icon,omitempty"`
+	SubCategory *[]SubCategory     `bson:"sub_category" json:"sub_category"`
 }
 
 type SubCategory struct {
-	ID   primitive.ObjectID `bson:"_id,omitempty"`
-	Name *string            `bson:"name,omitempty"`
-	Icon *string            `bson:"icon,omitempty"`
+	ID   primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	Name *string            `bson:"name,omitempty" json:"name,omitempty"`
+	Icon *string            `bson:"icon,omitempty" json:"icon,omitempty"`
+}
+
+type Services struct {
+	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Type          *string            `json:"type,omitempty" bson:"type,omitempty"`
+	Name          *string            `json:"name,omitempty" bson:"name,omitempty"`
+	Label         *string            `json:"label,omitempty" bson:"label,omitempty"`
+	BasePrice     float32            `json:"basePrice" bson:"basePrice"`
+	Vadility      []int              `json:"vadility" bson:"vadility"`
+	UnitOfMeasure *string            `json:"unitOfMeasure" bson:"unitOfMeasure"`
 }
 
 type Listing struct {

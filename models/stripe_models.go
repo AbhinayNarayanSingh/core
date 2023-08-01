@@ -2,7 +2,7 @@ package models
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
-type Services struct {
+type PayloadServices struct {
 	Service       *string  `json:"service" bson:"service"`
 	Vadility      *int     `json:"vadility" bson:"vadility"`
 	UnitOfMeasure *string  `json:"unitOfMeasure" bson:"unitOfMeasure"`
@@ -10,7 +10,7 @@ type Services struct {
 }
 
 type Stripe struct {
-	Services         []Services         `json:"services" bson:"services"`
+	Services         []PayloadServices  `json:"services" bson:"services"`
 	ID               primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Against          primitive.ObjectID `json:"against,omitempty" bson:"against,omitempty"`
 	User_ID          primitive.ObjectID `json:"user_id,omitempty" bson:"user_id,omitempty"`

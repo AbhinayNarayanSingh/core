@@ -19,6 +19,7 @@ import (
 
 var listingCollection *mongo.Collection = config.OpenCollection(config.Client, "listings")
 var categoriesCollection *mongo.Collection = config.OpenCollection(config.Client, "categories")
+var servicesCollection *mongo.Collection = config.OpenCollection(config.Client, "services")
 
 func CreateNewCategory() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -40,6 +41,29 @@ func CreateNewCategory() gin.HandlerFunc {
 		}
 
 		c.JSON(201, gin.H{"message": "done"})
+	}
+}
+
+func CreateNewService() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var payload models.Services
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": locals.BadRequest, "details": err.Error()})
+			return
+		}
+		object_id := primitive.NewObjectID()
+		payload.ID = object_id
+
+		if _, err := servicesCollection.InsertOne(ctx, payload); err != nil {
+			c.JSON(400, gin.H{"message": locals.InternalServerError, "details": err})
+			return
+		}
+
+		c.JSON(201, gin.H{"message": "done", "data": payload})
 	}
 }
 
@@ -71,6 +95,37 @@ func GetCategories() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"categories": categories})
+	}
+}
+
+func GetServices() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var services []bson.M
+
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		cursor, err := servicesCollection.Find(ctx, bson.M{})
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Failed to retrieve services", "error": err.Error()})
+			return
+		}
+		defer cursor.Close(ctx)
+
+		for cursor.Next(ctx) {
+			var service bson.M
+			if err := cursor.Decode(&service); err != nil {
+				log.Fatal(err)
+			}
+			services = append(services, service)
+		}
+
+		if err := cursor.Err(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Error occurred during services retrieval", "error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"services": services})
 	}
 }
 

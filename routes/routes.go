@@ -36,6 +36,9 @@ func Path(router *gin.Engine) {
 	router.POST("/categories", controllers.CreateNewCategory())
 	router.GET("/categories", controllers.GetCategories())
 
+	router.POST("/services", controllers.CreateNewService())
+	router.GET("/services", controllers.GetServices())
+
 	router.DELETE("/cloudinary/destroy", controllers.CloudinaryDestroy())
 
 }
