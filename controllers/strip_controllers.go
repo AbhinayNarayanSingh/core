@@ -126,7 +126,14 @@ func CreatePaymentIntent() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"_id": payload.ID, "clientSecret": payload.ClientSecret, "paymentIntentID": payload.PaymentIntent_ID, "totalCost": totalCost})
+		c.JSON(http.StatusOK, gin.H{
+			"_id":             payload.ID,
+			"clientSecret":    payload.ClientSecret,
+			"paymentIntentID": payload.PaymentIntent_ID,
+			"totalCost":       totalCost,
+			"type":            payload.Type,
+			"narration":       payload.Narration,
+		})
 	}
 }
 

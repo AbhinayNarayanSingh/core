@@ -51,9 +51,10 @@ func SecurePath(router *gin.Engine) {
 
 	router.POST("/create-checkout-session", controllers.CreateCheckoutSession())
 	router.POST("/webhook", controllers.StripeWebhookListener())
+
 	router.POST("/create-payment-intent", controllers.CreatePaymentIntent())
-	router.POST("/cancel-payment-intent", controllers.CancelPaymentIntent())
 	router.POST("/status-payment-intent", controllers.StatusPaymentIntent())
+	router.DELETE("/cancel-payment-intent", controllers.CancelPaymentIntent())
 }
 
 func AdminSecurePath(router *gin.Engine) {
