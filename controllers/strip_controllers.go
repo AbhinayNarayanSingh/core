@@ -95,11 +95,27 @@ func CreatePaymentIntent() gin.HandlerFunc {
 			totalCost += cost
 		}
 
+		// c.JSON(200, payload)
+		address := &stripe.AddressParams{
+			Line1:      stripe.String(*payload.BillingAddress.Address),
+			City:       stripe.String(*payload.BillingAddress.City),
+			State:      stripe.String(*payload.BillingAddress.State),
+			Country:    stripe.String(*payload.BillingAddress.Country),
+			PostalCode: stripe.String(*payload.BillingAddress.PostalCode),
+		}
+
 		params := &stripe.PaymentIntentParams{
 			Amount:   stripe.Int64(int64(totalCost * 100)),
 			Currency: stripe.String(string(stripe.CurrencyCAD)),
 			AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
 				Enabled: stripe.Bool(true),
+			},
+			ReceiptEmail: stripe.String(*payload.BillingAddress.Email),
+			Description:  stripe.String(*payload.Narration),
+			Shipping: &stripe.ShippingDetailsParams{
+				Address: address,
+				Name:    stripe.String(*payload.BillingAddress.Name),
+				Phone:   stripe.String(*payload.BillingAddress.Phone),
 			},
 		}
 		pi, err := paymentintent.New(params)
@@ -140,8 +156,14 @@ func CreatePaymentIntent() gin.HandlerFunc {
 func CancelPaymentIntent() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		stripe.Key = os.Getenv("STRIP_KEY")
-		paymentIntentID := "pi_3NZvLaSAIDSoJ9VZ0CvysG9F"
-		pi, err := paymentintent.Cancel(paymentIntentID, nil)
+		var payload models.StripePayload
+
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": locals.BadRequest, "details": err.Error()})
+			return
+		}
+
+		pi, err := paymentintent.Cancel(payload.PaymentIntent_ID, nil)
 		if err != nil {
 			c.JSON(500, err.Error())
 			return
@@ -153,13 +175,23 @@ func CancelPaymentIntent() gin.HandlerFunc {
 func StatusPaymentIntent() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		stripe.Key = os.Getenv("STRIP_KEY")
-		paymentIntentID := "pi_3NFDkXSAIDSoJ9VZ1lTrKlG8"
-		pi, err := paymentintent.Get(paymentIntentID, nil)
+		// paymentIntentID := "pi_3NFDkXSAIDSoJ9VZ1lTrKlG8"
+		var payload models.StripePayload
+
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": locals.BadRequest, "details": err.Error()})
+			return
+		}
+
+		// var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		// defer cancel()
+
+		pi, err := paymentintent.Get(payload.PaymentIntent_ID, nil)
 		if err != nil {
 			c.JSON(500, err.Error())
 			return
 		}
-		c.JSON(http.StatusOK, pi.Status)
+		c.JSON(http.StatusOK, pi)
 	}
 }
 

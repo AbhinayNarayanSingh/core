@@ -1,0 +1,8 @@
+[GIN] 2023/08/03 - 20:38:16 | 200 |  356.435703ms |             ::1 | POST     "/create-payment-intent"
+[GIN] 2023/08/03 - 20:51:46 | 200 |   1.01147371s |             ::1 | POST     "/create-payment-intent"
+[GIN] 2023/08/03 - 21:14:36 | 200 |   1.24809328s |             ::1 | POST     "/create-payment-intent"
+[GIN] 2023/08/03 - 21:51:38 | 200 |  561.992108ms |             ::1 | POST     "/status-payment-intent"
+[GIN] 2023/08/03 - 22:06:23 | 200 |   468.48537ms |             ::1 | POST     "/address"
+[GIN] 2023/08/03 - 22:08:49 | 200 |  684.668961ms |             ::1 | POST     "/address"
+[GIN] 2023/08/03 - 22:33:22 | 200 |  1.041402196s |             ::1 | POST     "/create-payment-intent"
+[GIN] 2023/08/03 - 22:41:32 | 200 |  795.330743ms |             ::1 | POST     "/create-payment-intent"

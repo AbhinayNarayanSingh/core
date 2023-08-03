@@ -160,7 +160,7 @@ func CreateNewListing() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "done", "_id": object_id})
+		c.JSON(http.StatusCreated, gin.H{"message": "done", "_id": object_id})
 	}
 }
 
